@@ -35,6 +35,8 @@ const EDGE = 28
 // never less than the width in sight, so there is room to fill the next ones.
 const AFTER = 16
 const IN_SIGHT = 20
+// The empty bars after the song that are in sight from the start, to fill the next one in.
+const ROOM = 4
 
 // A pattern with versions plays differently from bar to bar, so its picture is drawn from
 // more of its bars before it is taken to repeat.
@@ -892,9 +894,9 @@ export function SongPanel() {
     const [chosen, setZoom] = createSignal<number | null>(null)
     const [width, setWidth] = createSignal(0)
     const [left, setLeft] = createSignal(0)
-    // Until a zoom is chosen, bars are as wide as they can be with a first song and some room
-    // after it still in sight.
-    const barWidth = createMemo(() => chosen() ?? [...ZOOMS].reverse().find((px) => px * IN_SIGHT <= (width() || 800)) ?? ZOOMS[1])
+    // Until a zoom is chosen, bars are as wide as they can be with the whole song and a few bars
+    // after it in sight, and no narrower than the narrowest zoom.
+    const barWidth = createMemo(() => chosen() ?? [...ZOOMS].reverse().find((px) => px * Math.max(IN_SIGHT, length() + ROOM) <= (width() || 800)) ?? ZOOMS[0])
     const shown = createMemo(() => Math.min(MAX_BARS, Math.max(length() + AFTER, Math.ceil((width() || 800) / barWidth()) + AFTER / 2)))
     const view = createMemo(
         (): View => ({

@@ -17,7 +17,7 @@ async function open(page: Page) {
     }, SONG)
     await page.goto('/')
     await page.waitForFunction(() => Boolean((window as any).__weft))
-    await page.getByTestId('top').getByRole('button', { name: 'Mixer', exact: true }).click()
+    await page.getByTestId('top').getByRole('button', { name: 'Output', exact: true }).click()
     await expect(mixer(page)).toBeVisible()
 }
 

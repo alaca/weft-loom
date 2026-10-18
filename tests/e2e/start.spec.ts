@@ -24,7 +24,8 @@ async function firstStart(page: Page) {
 }
 
 async function closeSong(page: Page) {
-    await page.getByTestId('top').getByRole('button', { name: 'Close song', exact: true }).click()
+    await page.getByTestId('song-name').click()
+    await page.getByTestId('song-menu').getByRole('button', { name: 'Close song', exact: true }).click()
 }
 
 const change = (page: Page) => page.evaluate(() => (window as any).__weft.engine.applyEdit({ from: 0, to: 0, insert: '// changed\n' }))

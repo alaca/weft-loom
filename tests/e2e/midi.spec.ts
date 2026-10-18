@@ -83,7 +83,7 @@ test('a MIDI keyboard plays the pattern you are on, and is written into a piano 
     await page.getByRole('button', { name: 'Play lead on the keyboard', exact: true }).click()
 
     // The sound settings name the keyboard.
-    await page.getByRole('button', { name: 'Mixer', exact: true }).click()
+    await page.getByRole('button', { name: 'Output', exact: true }).click()
     await page.getByTestId('mixer').getByRole('button', { name: 'Devices', exact: true }).click()
     await expect(page.getByTestId('sound-midi')).toHaveText('Test keys 49')
 })
@@ -167,7 +167,7 @@ test('a pad writes hits into a drum grid, a note sounds for as long as its key i
     await expect.poll(() => heard(page)).toBeLessThan(0.001)
 
     // A knob of the controller is taught to turn the cutoff of the lead, and then turns it.
-    await page.getByRole('button', { name: 'Mixer', exact: true }).click()
+    await page.getByRole('button', { name: 'Output', exact: true }).click()
     await page.getByTestId('mixer').getByRole('button', { name: 'Devices', exact: true }).click()
     await page.getByRole('button', { name: 'Learn the knobs and pads of a controller', exact: true }).click()
     await expect(page.getByTestId('knob-learn')).toContainText('Press a knob in the app')
@@ -243,7 +243,7 @@ test('the song follows the MIDI clock of a drum machine: it starts with it, keep
     await page.waitForFunction(() => Boolean((window as any).__weft))
     await expect(page.getByTestId('sounds')).toHaveText('Sounds ready', { timeout: 30000 })
 
-    await page.getByRole('button', { name: 'Mixer', exact: true }).click()
+    await page.getByRole('button', { name: 'Output', exact: true }).click()
     await page.getByTestId('mixer').getByRole('button', { name: 'Devices', exact: true }).click()
     await page.getByRole('combobox', { name: 'Whose MIDI clock the song follows' }).selectOption({ label: 'The clock of Test drum machine' })
     await page.keyboard.press('Escape')
@@ -288,7 +288,7 @@ test('pads of a controller are taught to switch a scene and to mute a pattern, a
     const learn = page.getByTestId('knob-learn')
     const scene = page.getByRole('button', { name: 'Drop', exact: true })
 
-    await page.getByRole('button', { name: 'Mixer', exact: true }).click()
+    await page.getByRole('button', { name: 'Output', exact: true }).click()
     await page.getByTestId('mixer').getByRole('button', { name: 'Devices', exact: true }).click()
     await page.getByRole('button', { name: 'Learn the knobs and pads of a controller', exact: true }).click()
     await expect(learn).toContainText('a scene, or the M or S of a pattern')

@@ -5,7 +5,10 @@ const NO_BASS = 'setcpm(120/4)\n\ndrums: s("bd*4")\n  .bank("RolandTR909")\n\nle
 
 const code = (page: Page) => page.evaluate(() => (window as any).__weft.engine.getCode() as string)
 const events = (page: Page, id: string) => page.evaluate((name) => (window as any).__weft.engine.events(name, 0).length as number, id)
-const remove = (page: Page, id: string) => page.getByRole('button', { name: `Remove the pattern ${id}`, exact: true })
+async function remove(page: Page, id: string) {
+    await page.getByRole('button', { name: `More for ${id}`, exact: true }).click()
+    await page.getByRole('menuitem', { name: `Remove the pattern ${id}`, exact: true }).click()
+}
 const names = (page: Page) => page.locator('.st .st-n')
 
 async function open(page: Page, song = SONG) {
@@ -17,7 +20,7 @@ async function open(page: Page, song = SONG) {
 test('takes a pattern out of the song and the code', async ({ page }) => {
     await open(page)
     await expect.poll(() => events(page, 'bass')).toBe(2)
-    await remove(page, 'bass').click()
+    await remove(page, 'bass')
     await expect.poll(() => code(page)).toBe(NO_BASS)
     await expect(names(page)).toHaveText(['drums', 'lead'])
     await expect.poll(() => events(page, 'bass')).toBe(0)
@@ -26,7 +29,7 @@ test('takes a pattern out of the song and the code', async ({ page }) => {
 
 test('says what was removed where it was, and puts it back', async ({ page }) => {
     await open(page)
-    await remove(page, 'bass').click()
+    await remove(page, 'bass')
     const gone = page.getByTestId('removed')
     await expect(gone).toHaveText(/bass was removed\./)
     await expect(page.locator('.ctl > .st, .ctl > .gone')).toHaveText([/drums/, /bass was removed/, /lead/])

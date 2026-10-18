@@ -1,5 +1,5 @@
 import { createEffect, createSignal, For, Match, on, onCleanup, Show, Switch } from 'solid-js'
-import { toggleJams } from '../app/controller'
+import { closeJams } from '../app/controller'
 import { askToJoin, cancelAsk, inviteToJam, joinCall, joinJam, leaveJam, nameYourself, openToJam, refreshOpenJams, sayInJam, toggleCam, toggleMic } from '../app/jam'
 import { aboutText, NAME_LIMIT, SAY_LIMIT, showInvite } from '../jam/protocol'
 import {
@@ -124,7 +124,7 @@ export function JamPanel() {
                     <Show
                         when={jamming()}
                         fallback={
-                            <button class="ib" aria-label="Close jams" onClick={toggleJams}>
+                            <button class="ib" aria-label="Close jams" onClick={closeJams}>
                                 <svg viewBox="0 0 16 16">
                                     <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
                                 </svg>

@@ -1,10 +1,7 @@
 import { For, onCleanup, onMount, Show } from 'solid-js'
 import { openAccount } from '../app/account'
 import {
-    closeSong,
     dismissSongNote,
-    duplicateSong,
-    newSong,
     openExport,
     openJams,
     openSongFile,
@@ -56,7 +53,6 @@ export function TopBar() {
     }
     onMount(() => document.addEventListener('pointerdown', away))
     onCleanup(() => document.removeEventListener('pointerdown', away))
-    const inJam = 'You are in a jam on this song. Press Leave in the Jams panel first.'
     // A change of the tempo field does not say whether it comes from an arrow key that is held
     // down, so the key press before it is asked.
     let keyHeld = false
@@ -75,46 +71,11 @@ export function TopBar() {
             </Show>
             <Show when={!DEMO}>
                 <div class="top-l">
-                    <SongMenu />
+                    <SongMenu openFile={() => picker?.click()} />
                     <div class="acts" role="group" aria-label="This song">
                         <button class="ib" aria-label="Save" title={currentSong()?.changed ? `Save (${MOD} S). Marks the version you can go back to.` : 'Saved. Nothing has changed since.'} disabled={!currentSong()?.changed} onClick={saveSong}>
                             <svg viewBox="0 0 16 16" aria-hidden="true">
                                 <path class="ln" stroke-linejoin="round" d="M2.8 2.8h8.1l2.3 2.3v8.1H2.8zM5.2 2.8v3.4h5V2.8M5.2 13.2V9.4h5.6v3.8" />
-                            </svg>
-                        </button>
-                        <button class="ib" aria-label="Close song" title={jamming() ? inJam : 'Close this song and go back to the start screen'} disabled={jamming()} onClick={closeSong}>
-                            <svg viewBox="0 0 16 16" aria-hidden="true">
-                                <path class="ln" d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" />
-                            </svg>
-                        </button>
-                    </div>
-                    <i class="top-sep" />
-                    <div class="acts" role="group" aria-label="Songs and files">
-                        <button class="ib" aria-label="New song" title={jamming() ? inJam : 'New song'} disabled={jamming()} onClick={newSong}>
-                            <svg viewBox="0 0 16 16" aria-hidden="true">
-                                <path class="ln" stroke-linejoin="round" d="M3.8 2.3h5.4l3 3v8.4H3.8zM8 7.4v4M6 9.4h4" />
-                            </svg>
-                        </button>
-                        <button class="ib" aria-label="Open a file" title={jamming() ? inJam : 'Open a song file, or a file of code'} disabled={jamming()} onClick={() => picker?.click()}>
-                            <svg viewBox="0 0 16 16" aria-hidden="true">
-                                <path class="ln" stroke-linejoin="round" d="M2 4h4l1.5 1.6H14v7.2H2z" />
-                            </svg>
-                        </button>
-                        <input
-                            ref={picker}
-                            type="file"
-                            accept={SONG_KINDS.map((kind) => `.${kind}`).join(',')}
-                            hidden
-                            data-testid="song-file"
-                            onChange={(event) => {
-                                const file = event.currentTarget.files?.[0]
-                                event.currentTarget.value = ''
-                                if (file) void openSongFile(file)
-                            }}
-                        />
-                        <button class="ib rare" aria-label="Duplicate this song" title={jamming() ? inJam : 'Duplicate this song'} disabled={jamming()} onClick={duplicateSong}>
-                            <svg viewBox="0 0 16 16" aria-hidden="true">
-                                <path class="ln" stroke-linejoin="round" d="M5.6 5.6h7.6v7.6H5.6zM10.4 5.6V2.8H2.8v7.6h2.8" />
                             </svg>
                         </button>
                         <button class="ib rare" aria-label="Export" title="Export: a song file, the sound, or the code" onClick={openExport}>
@@ -128,6 +89,18 @@ export function TopBar() {
                             </svg>
                         </button>
                     </div>
+                    <input
+                        ref={picker}
+                        type="file"
+                        accept={SONG_KINDS.map((kind) => `.${kind}`).join(',')}
+                        hidden
+                        data-testid="song-file"
+                        onChange={(event) => {
+                            const file = event.currentTarget.files?.[0]
+                            event.currentTarget.value = ''
+                            if (file) void openSongFile(file)
+                        }}
+                    />
                 </div>
             </Show>
             <Show when={jamming()}>
@@ -228,20 +201,22 @@ export function TopBar() {
             </div>
             <div class="grow" />
             <div class="shows">
-                <button class="ib" classList={{ on: mixerOpen() }} aria-pressed={mixerOpen()} aria-label="Mixer" title={mixerOpen() ? 'Hide the mixer' : 'Show the mixer: volume, pan, tone and the meters'} onClick={toggleMixer}>
+                <button class="ib sw" classList={{ on: mixerOpen() }} aria-pressed={mixerOpen()} aria-label="Output" title={mixerOpen() ? 'Hide the output: volume, pan, tone and the meters of what you hear' : 'Show the output: volume, pan, tone and the meters of what you hear'} onClick={toggleMixer}>
                     <svg viewBox="0 0 16 16" aria-hidden="true">
                         <path class="ln" d="M4 2.5v11M8 2.5v11M12 2.5v11" />
                         <path d="M2.4 8.6h3.2v2.4H2.4zM6.4 4.2h3.2v2.4H6.4zM10.4 9.8h3.2v2.4h-3.2z" />
                     </svg>
+                    <span class="cap">Output</span>
                 </button>
-                <button class="ib" classList={{ on: soundsOpen() }} aria-pressed={soundsOpen()} aria-label="Sounds" title={soundsOpen() ? 'Hide the sounds' : 'Show the sounds'} onClick={toggleSounds}>
+                <button class="ib sw" classList={{ on: soundsOpen() }} aria-pressed={soundsOpen()} aria-label="Sounds" title={soundsOpen() ? 'Hide the sounds' : 'Show the sounds'} onClick={toggleSounds}>
                     <svg viewBox="0 0 16 16" aria-hidden="true">
                         <path class="ln" d="M2.5 8h1.4M6 4.5v7M8.6 2.5v11M11.2 5.5v5M13.6 8h.4" />
                     </svg>
+                    <span class="cap">Sounds</span>
                 </button>
                 <Show when={!DEMO}>
                     <button
-                        class="ib"
+                        class="ib sw"
                         classList={{ on: jamsOpen(), open: jamListed() }}
                         aria-pressed={jamsOpen()}
                         aria-label="Jams"
@@ -253,17 +228,20 @@ export function TopBar() {
                             <circle cx="11" cy="6.6" r="2" />
                             <path d="M1.4 13c.5-2.6 2.2-3.7 4.2-3.7s3.7 1.1 4.2 3.7zM10.6 13c-.1-1.2-.5-2.2-1.2-3 2.3-.9 4.7.2 5.2 3z" />
                         </svg>
+                        <span class="cap">Jam</span>
                     </button>
                 </Show>
-                <button class="ib" classList={{ on: waveShown() }} aria-pressed={waveShown()} aria-label="Waveform" title={waveShown() ? 'Hide the waveform' : 'Show the waveform'} onClick={toggleWaveform}>
+                <button class="ib sw" classList={{ on: waveShown() }} aria-pressed={waveShown()} aria-label="Waveform" title={waveShown() ? 'Hide the waveform' : 'Show the waveform of what you hear'} onClick={toggleWaveform}>
                     <svg viewBox="0 0 16 16" aria-hidden="true">
                         <path class="ln" d="M1.5 8c1.1-5 2.2-5 3.3 0s2.2 5 3.3 0 2.2-5 3.3 0 2.2 5 3.1 0" />
                     </svg>
+                    <span class="cap">Wave</span>
                 </button>
-                <button class="ib" classList={{ on: songShown() }} aria-pressed={songShown()} aria-label="Song panel" title={songShown() ? 'Hide the song panel' : 'Show the song panel'} onClick={toggleSongPanel}>
+                <button class="ib sw" classList={{ on: songShown() }} aria-pressed={songShown()} aria-label="Song panel" title={songShown() ? 'Hide the song panel' : 'Show the song panel'} onClick={toggleSongPanel}>
                     <svg viewBox="0 0 16 16" aria-hidden="true">
                         <path d="M1.5 2.8h7v2.4h-7zM5.5 6.8h9v2.4h-9zM2.5 10.8h6v2.4h-6z" />
                     </svg>
+                    <span class="cap">Song</span>
                 </button>
             </div>
             <div class="seg">

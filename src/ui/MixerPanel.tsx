@@ -1,5 +1,5 @@
 import { For, onCleanup, onMount, Show } from 'solid-js'
-import { changeMix, levelsOf, resetMix, toggleMixer, openSoundSettings } from '../app/controller'
+import { changeMix, closeMixer, levelsOf, resetMix, openSoundSettings } from '../app/controller'
 import { DEMO } from '../demo/demo'
 import type { ControlView } from '../controls/views'
 import { isUsualMix, METER_MARKS, meterShare, panText, settle, shareOf, toneText, TONE_MOST, VOLUME_MOST, volumeText, type Mix } from '../library/mix'
@@ -69,16 +69,16 @@ function Meters() {
 
 const view = (label: string, describe: string, value: number, min: number, max: number, text: string): ControlView => ({ fn: 'mix', label, group: 'effects', describe, state: 'number', value, min, max, scale: 'linear', text })
 
-// The mixer: what stands between the song and your speakers. It is how the song sounds on this
+// The output: what stands between the song and your speakers. It is how the song sounds on this
 // machine, like the volume it holds, and no part of the song.
 export function MixerPanel() {
     const mix = (): Mix => mixNow()
     return (
         <Show when={mixerOpen()}>
-            <aside class="mx" classList={{ folded: isFolded('mixer') }} aria-label="Mixer" data-testid="mixer">
+            <aside class="mx" classList={{ folded: isFolded('mixer') }} aria-label="Output" data-testid="mixer">
                 <div class="jm-h">
-                    <Fold panel="mixer" name="the mixer" />
-                    <h2>Mixer</h2>
+                    <Fold panel="mixer" name="the output" />
+                    <h2>Output</h2>
                     <span class="grow" />
                     <button class="chip tgl" title="Sound settings: which microphone is used and what the app plays through" onClick={openSoundSettings}>
                         Devices
@@ -86,7 +86,7 @@ export function MixerPanel() {
                     <button class="chip tgl" disabled={isUsualMix(mix())} title="Put everything back where it usually is" onClick={resetMix}>
                         Reset
                     </button>
-                    <button class="ib" aria-label="Close mixer" onClick={toggleMixer}>
+                    <button class="ib" aria-label="Close the output" onClick={closeMixer}>
                         <svg viewBox="0 0 16 16">
                             <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
                         </svg>

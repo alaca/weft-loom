@@ -41,7 +41,8 @@ async function again(page: Page) {
 test('a new song starts with nothing but the tempo, and the old one is kept', async ({ page }) => {
     await open(page)
     await expect(name(page)).toContainText('Untitled')
-    await page.getByTestId('top').getByRole('button', { name: 'New song', exact: true }).click()
+    await name(page).click()
+    await menu(page).getByRole('button', { name: 'New song', exact: true }).click()
     await expect(menu(page)).toHaveCount(0)
     await expect(name(page)).toContainText('Untitled 2')
     await expect.poll(() => code(page)).toBe(NEW)
@@ -59,7 +60,8 @@ test('a new song starts with nothing but the tempo, and the old one is kept', as
 test('each song keeps its own work, also when the app is closed without saving', async ({ page }) => {
     await open(page)
     await type(page, '// first\n')
-    await page.getByTestId('top').getByRole('button', { name: 'New song', exact: true }).click()
+    await name(page).click()
+    await menu(page).getByRole('button', { name: 'New song', exact: true }).click()
     await page.getByTestId('add-pattern').getByRole('button', { name: 'Melody', exact: true }).click()
     await expect.poll(() => code(page)).toContain('melody: note("~")')
     await again(page)
@@ -115,7 +117,8 @@ test('a song can be renamed', async ({ page }) => {
 
 test('a song can be deleted and put back', async ({ page }) => {
     await open(page)
-    await page.getByTestId('top').getByRole('button', { name: 'New song', exact: true }).click()
+    await name(page).click()
+    await menu(page).getByRole('button', { name: 'New song', exact: true }).click()
     await name(page).click()
     await menu(page).getByRole('button', { name: 'Open Untitled', exact: true }).hover()
     await menu(page).getByRole('button', { name: 'Delete Untitled', exact: true }).click()
@@ -148,7 +151,8 @@ test('when there is no room left for songs it is said, and deleting a song makes
     const note = page.getByTestId('song-note')
     await open(page)
     await fill(page)
-    await page.getByTestId('top').getByRole('button', { name: 'New song', exact: true }).click()
+    await name(page).click()
+    await menu(page).getByRole('button', { name: 'New song', exact: true }).click()
     await expect(note).toContainText('There is no room left for another song.')
     await expect(name(page)).toHaveText('Untitled')
 

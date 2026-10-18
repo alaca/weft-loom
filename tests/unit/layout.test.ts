@@ -18,15 +18,17 @@ describe('readLayout', () => {
             soundsWidth: 302,
             codeWidth: null,
             soundsShare: null,
-            folded: [],
+            folded: ['mixer'],
         })
         expect(readLayout(JSON.stringify({ jams: true, soundsShare: 0.95 }))).toMatchObject({ jams: true, soundsShare: 0.75 })
         expect(readLayout(JSON.stringify({ jams: 'yes', soundsShare: 'half' }))).toMatchObject({ jams: false, soundsShare: null })
         expect([readLayout(JSON.stringify({ mixer: false })).mixer, readLayout(JSON.stringify({ mixer: 1 })).mixer, readLayout(JSON.stringify({ sounds: 0 })).sounds]).toEqual([false, true, true])
         expect(readLayout(JSON.stringify({ view: 'sideways' })).view).toBe('both')
         expect(readLayout(JSON.stringify({ folded: ['jams', 'nothing', 'mixer'] })).folded).toEqual(['mixer', 'jams'])
-        expect(readLayout(JSON.stringify({ folded: 'all' })).folded).toEqual([])
-        expect(isUsual({ ...DEFAULT_LAYOUT, folded: [] })).toBe(true)
+        expect(readLayout(JSON.stringify({ folded: 'all' })).folded).toEqual(['mixer'])
+        expect(readLayout(JSON.stringify({ folded: [] })).folded).toEqual([])
+        expect(isUsual({ ...DEFAULT_LAYOUT, folded: ['mixer'] })).toBe(true)
+        expect(isUsual({ ...DEFAULT_LAYOUT, folded: [] })).toBe(false)
         expect(isUsual({ ...DEFAULT_LAYOUT, folded: ['sounds'] })).toBe(false)
     })
 })

@@ -55,7 +55,7 @@ const kept = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem
 const settings = (page: Page) => page.getByTestId('sound-settings')
 
 async function openSettings(page: Page) {
-    if (!(await page.getByTestId('mixer').count())) await page.getByRole('button', { name: 'Mixer', exact: true }).click()
+    if (!(await page.getByTestId('mixer').count())) await page.getByRole('button', { name: 'Output', exact: true }).click()
     await page.getByTestId('mixer').getByRole('button', { name: 'Devices', exact: true }).click()
     await expect(settings(page)).toBeVisible()
 }

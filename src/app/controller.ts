@@ -571,7 +571,7 @@ export async function mount(root: HTMLElement): Promise<void> {
             'line',
             { id: 'weft-view-sounds', text: 'Sounds', checked: soundsOpen, action: toggleSounds },
             { id: 'weft-view-jams', text: 'Jams', checked: jamsOpen, action: toggleJams },
-            { id: 'weft-view-mixer', text: 'Mixer', checked: mixerOpen, action: toggleMixer },
+            { id: 'weft-view-mixer', text: 'Output', checked: mixerOpen, action: toggleMixer },
             { id: 'weft-view-wave', text: 'Waveform', checked: waveShown, action: toggleWaveform },
             { id: 'weft-view-song', text: 'Song Panel', checked: songShown, action: toggleSongPanel },
             'line',
@@ -1207,7 +1207,7 @@ function followTempo(before: number, change: (values: string[]) => string[]): Te
     return edit ? [edit] : []
 }
 
-// The mixer is how the song sounds on this machine. Nothing of it is written into the song.
+// The output is how the song sounds on this machine. Nothing of it is written into the song.
 export function changeMix(part: Partial<Mix>) {
     const next = fitMix({ ...mixNow(), ...part })
     setMixNow(next)
@@ -1266,8 +1266,17 @@ export function setView(view: ViewMode) {
     keepLayout()
 }
 
+// A panel of the left column that is asked for by its icon is shown and unfolded; asked for
+// again while it is shown whole, it is put away.
 export function toggleMixer() {
-    setMixerOpen(!mixerOpen())
+    const whole = mixerOpen() && !folded().includes('mixer')
+    setMixerOpen(!whole)
+    if (!whole) unfold('mixer')
+    keepLayout()
+}
+
+export function closeMixer() {
+    setMixerOpen(false)
     keepLayout()
 }
 
@@ -1311,7 +1320,12 @@ export function dragCode(wanted: number, done: boolean) {
 // The jam sits under the sounds in the left column, so a sound can be picked while a jam is
 // open. Either is shown without the other; with both, the line between them can be dragged.
 export function toggleJams() {
-    setJamsOpen(!jamsOpen())
+    if (jamsOpen() && !folded().includes('jams')) closeJams()
+    else openJams()
+}
+
+export function closeJams() {
+    setJamsOpen(false)
     setJamUnread(0)
     keepLayout()
 }
@@ -2224,7 +2238,7 @@ export function closeSounds() {
     keepLayout()
 }
 
-export const toggleSounds = () => (soundsOpen() ? closeSounds() : openSounds())
+export const toggleSounds = () => (soundsOpen() && !folded().includes('sounds') ? closeSounds() : openSounds())
 
 // Yours are the sounds the app keeps for you, and no others: a sound that is only known to the
 // engine under such a name is not shown as one.

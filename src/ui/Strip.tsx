@@ -324,7 +324,7 @@ export function Strip(props: { id: string }) {
                                 </button>
                             </span>
                             <span class="st-more" ref={more} onClick={(event) => event.stopPropagation()}>
-                                <button class="st-x" aria-label={`More for ${props.id}`} aria-haspopup="menu" aria-expanded={menu()} title="Rename, duplicate, move" disabled={stale()} onClick={() => setMenu(!menu())}>
+                                <button class="st-x" aria-label={`More for ${props.id}`} aria-haspopup="menu" aria-expanded={menu()} title="Rename, duplicate, move or remove" disabled={stale()} onClick={() => setMenu(!menu())}>
                                     <svg viewBox="0 0 12 12" class="dots">
                                         <circle cx="2" cy="6" r="1.1" />
                                         <circle cx="6" cy="6" r="1.1" />
@@ -399,23 +399,20 @@ export function Strip(props: { id: string }) {
                                         >
                                             Move down
                                         </button>
+                                        <hr />
+                                        <button
+                                            role="menuitem"
+                                            aria-label={`Remove the pattern ${props.id}`}
+                                            onClick={() => {
+                                                setMenu(false)
+                                                removePattern(props.id)
+                                            }}
+                                        >
+                                            Remove
+                                        </button>
                                     </div>
                                 </Show>
                             </span>
-                            <button
-                                class="st-x"
-                                aria-label={`Remove the pattern ${props.id}`}
-                                title="Remove this pattern"
-                                disabled={stale()}
-                                onClick={(event) => {
-                                    event.stopPropagation()
-                                    removePattern(props.id)
-                                }}
-                            >
-                                <svg viewBox="0 0 8 8" aria-hidden="true">
-                                    <path d="M1.5 1.5l5 5M6.5 1.5l-5 5" />
-                                </svg>
-                            </button>
                         </span>
                     </div>
                     <Show when={!folded()}>

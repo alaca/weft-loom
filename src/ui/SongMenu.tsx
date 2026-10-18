@@ -1,16 +1,22 @@
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
-import { deleteSong, listSongs, openSong, renameSong, restoreSong, revertSong } from '../app/controller'
+import { closeSong, deleteSong, duplicateSong, listSongs, newSong, openSong, renameSong, restoreSong, revertSong } from '../app/controller'
 import { whenText } from '../library/shelf'
 import { jamming, jamPeer } from '../stores/jam'
 import { currentSong, deletedSong, songs } from '../stores/song'
 
-// The song that is open, by name, and the songs you have. Everything that is done with a song
-// is in the top bar beside it.
-export function SongMenu() {
+// The song that is open, by name, what can be done with it, and the songs you have. Saving,
+// exporting and publishing are in the top bar beside it.
+export function SongMenu(props: { openFile: () => void }) {
     let root!: HTMLDivElement
     const [open, setOpen] = createSignal(false)
     const [now, setNow] = createSignal(Date.now())
     const list = createMemo(() => songs().map((entry) => (entry.id === currentSong()?.id ? (currentSong() ?? entry) : entry)))
+    const actions: { label: string; about: string; go: () => void }[] = [
+        { label: 'New song', about: 'Start a new song', go: newSong },
+        { label: 'Open a file', about: 'Open a song file, or a file of code', go: () => props.openFile() },
+        { label: 'Duplicate', about: 'Make a copy of this song, and open it', go: duplicateSong },
+        { label: 'Close song', about: 'Close this song and go back to the start screen', go: closeSong },
+    ]
 
     const toggle = () => {
         if (!open()) {
@@ -72,6 +78,23 @@ export function SongMenu() {
                                 </button>
                             </div>
                         </Show>
+                        <div class="sm-acts" role="group" aria-label="Songs and files">
+                            <For each={actions}>
+                                {(action) => (
+                                    <button
+                                        class="btn"
+                                        disabled={jamming()}
+                                        title={action.about}
+                                        onClick={() => {
+                                            setOpen(false)
+                                            action.go()
+                                        }}
+                                    >
+                                        {action.label}
+                                    </button>
+                                )}
+                            </For>
+                        </div>
                         <Show when={jamming()}>
                             <p class="sm-note" role="status" data-testid="song-jam">
                                 You are in a jam with {jamPeer()} on this song. To open another song, press Leave in the Jams panel first.

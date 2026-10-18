@@ -71,6 +71,9 @@ kbd { font: 500 9.5px/1 var(--mono); font-stretch: 87%; color: var(--linen-2); b
 .ib.who.in::after { content: ''; position: absolute; right: 5px; top: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--lichen); box-shadow: 0 0 0 2px var(--cloth); }
 .ib .ln { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
 .shows { display: flex; gap: 3px; }
+/* A switch for a part of the window says which part under its icon. */
+.ib.sw { width: auto; min-width: 40px; height: 40px; padding: 0 5px; align-content: center; gap: 4px; }
+.ib.sw .cap { font-size: 8px; letter-spacing: 0.08em; color: inherit; }
 .ib svg, .play svg { width: 16px; height: 16px; fill: currentColor; }
 .play { width: 36px; height: 36px; border-radius: 50%; background: var(--linen); color: var(--vat); display: grid; place-items: center; }
 .ros { display: flex; height: 38px; background: var(--vat); border: 1px solid var(--seam); border-radius: 10px; }
@@ -199,7 +202,10 @@ button.rn:hover { border-color: var(--linen-3); }
 .code { grid-area: code; position: relative; background: var(--cloth); border-left: 1px solid var(--seam); display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .code-h { min-height: 46px; flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 0 11px; padding: 7px 14px 7px 18px; border-bottom: 1px solid var(--seam); }
 .code-h h2 { font: 600 19px/1 var(--voice); padding-bottom: 2px; }
-.sync { display: flex; align-items: center; gap: 6px; color: var(--linen-2); font-size: 11.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* What the code is doing takes the room between the heading and the buttons, and gives it up
+   first when the column is narrow, so that the buttons stay on the heading's line. */
+.sync { flex: 1 1 0; justify-content: flex-end; display: flex; align-items: center; gap: 6px; color: var(--linen-2); font-size: 11.5px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.sync > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .sync i { width: 7px; height: 7px; border-radius: 50%; background: var(--linen-3); flex: none; }
 .sync[data-kind='live'] i { background: var(--lichen); }
 .sync[data-kind='dirty'] i { background: var(--saffron); }
@@ -212,6 +218,12 @@ button.rn:hover { border-color: var(--linen-3); }
    and the header keeps to one line. */
 .code { container-type: inline-size; }
 @container (max-width: 520px) { .upd > .btn kbd { display: none; } }
+/* On a narrow column the heading's word goes, so that what the code is doing can still be read. */
+@container (max-width: 440px) {
+    .code-h { gap: 0 7px; padding: 7px 10px 7px 14px; }
+    .code-h h2 { display: none; }
+    .sync { justify-content: flex-start; }
+}
 .upd > .btn:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
 .upd .up-m { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: 0; padding: 0 8px; gap: 5px; }
 .up-m b { font: 600 10px/1 var(--mono); font-stretch: 87%; color: var(--saffron); }
@@ -219,13 +231,13 @@ button.rn:hover { border-color: var(--linen-3); }
 .menu.single.up-dm { left: auto; right: 0; top: 36px; width: 250px; z-index: 30; }
 .up-dm p { margin: 4px 8px 6px; color: var(--linen-3); font-size: 11px; line-height: 1.45; }
 .up-dm .up-h { margin: 4px 8px 2px; color: var(--linen-2); font-weight: 600; }
-.up-dm hr { border: 0; border-top: 1px solid var(--seam); margin: 4px 2px; }
+.up-dm hr, .st-more hr { border: 0; border-top: 1px solid var(--seam); margin: 4px 2px; }
 .up-dm kbd { font: 400 10px/1 var(--mono); font-stretch: 87%; color: var(--linen-3); }
 .pf svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .pf-sc { flex: none; padding: 6px 14px 8px 18px; border-bottom: 1px solid var(--seam); }
 .pf-sc .sg-sc { margin: 0; }
 /* What is wrong with the code has a line of its own under the header, at any width. */
-.sync[data-kind='err'] { order: 9; flex: 0 0 100%; align-items: flex-start; padding: 7px 0 3px; color: var(--madder); line-height: 1.45; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+.sync[data-kind='err'] { order: 9; flex: 0 0 100%; justify-content: flex-start; align-items: flex-start; padding: 7px 0 3px; color: var(--madder); line-height: 1.45; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
 .sync[data-kind='err'] i { margin-top: 5px; }
 .sync[data-kind='err'] i { background: var(--madder); }
 .ed { position: relative; flex: 1; min-height: 0; overflow: hidden; }
@@ -497,7 +509,9 @@ svg.mini rect { fill: var(--h); }
 .sb-p svg { width: 9px; height: 9px; flex: none; align-self: center; fill: var(--linen-3); }
 .sb-p:hover svg { fill: var(--linen); }
 .sb-p b { font-weight: 600; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sb-p code { font: 400 10px/1 var(--mono); font-stretch: 87%; color: var(--linen-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-p code { font: 400 10px/1 var(--mono); font-stretch: 87%; color: var(--linen-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: none; }
+/* A sound's name in the code is shown on the one the pointer is on, and on the one in use. */
+.sb-i:hover .sb-p code, .sb-i:focus-within .sb-p code, .sb-i.on .sb-p code { display: inline; }
 .sb-u { height: 23px; padding: 0 11px; border-radius: 7px; border: 1px solid var(--seam); font-size: 11.5px; font-weight: 500; color: var(--linen-2); }
 .sb-u:hover:not(:disabled) { background: var(--linen); border-color: var(--linen); color: var(--vat); }
 .sb-on { padding: 0 4px; font-size: 11px; font-weight: 600; color: var(--linen); }
@@ -628,6 +642,7 @@ svg.mini rect { fill: var(--h); }
 .sm-name { height: 30px; border-radius: 8px; background: var(--vat); border: 1px solid var(--seam); color: var(--linen); font: 600 13px/1 var(--ui); padding: 0 10px; }
 .sm-name:focus { outline: none; border-color: var(--linen-3); }
 .sm-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sm-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .sm .btn:disabled { opacity: 0.45; cursor: default; }
 .sm-note { color: var(--linen-3); font-size: 11.5px; line-height: 1.45; }
 .sm h4 { font: 600 16px/1 var(--voice); margin-top: 4px; }

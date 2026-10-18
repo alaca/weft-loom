@@ -10,10 +10,10 @@ export const DOCS: DocSection[] = [
     {
         id: 'window',
         title: 'The window',
-        pictures: [{ file: '/app-1.webp', width: 1440, height: 900, alt: 'The Weft Loom window while a song plays: the mixer and the sounds on the left, the Song panel and the patterns in the middle, the code on the right.' }],
+        pictures: [{ file: '/app-1.webp', width: 1440, height: 900, alt: 'The Weft Loom window while a song plays: the output and the sounds on the left, the Song panel and the patterns in the middle, the code on the right.' }],
         html: `<p>A song in Weft Loom is a handful of patterns: drums, a bass line, a melody. Each pattern has a strip in the middle of the window, where you click steps and notes and turn knobs. On the right is the song's code.</p>
 <p>The strips and the code are the same song. Whatever you do in a strip is written into the code, and whatever you type into the code shows up in the strips, so you can use whichever suits you at the moment. The code is <a href="https://strudel.cc" rel="noopener">Strudel</a>, and everything Strudel can do works here.</p>
-<p>On the left are the Mixer and the Sounds. The icons at the top right show and hide each part of the window, and Controls, Both and Code choose between the strips, the code, or the two side by side.</p>
+<p>On the left are the Output and the Sounds. The icons at the top right show and hide each part of the window, and Controls, Both and Code choose between the strips, the code, or the two side by side.</p>
 <p><kbd>Space</kbd> plays and pauses. After typing in the code, <kbd>Cmd</kbd> <kbd>Enter</kbd> plays what you typed. Where this page says Cmd, it is Ctrl on Windows and Linux.</p>
 <p>Beside the play button are Song and Live. <b>Live</b> plays every pattern round and round, which is what you want while trying things out, and is where a new song starts. <b>Song</b> plays the bars you laid out in the Song panel, from the first to the last.</p>
 <p>New to it? <b>Make a first beat, step by step</b>, on the start screen and in the Help menu, makes one with you in a few minutes: drums, a bass line, a knob and a look at the code. A card at the bottom left says what to do next and rings where, and goes on once it is done.</p>`,
@@ -156,7 +156,7 @@ export const DOCS: DocSection[] = [
             { file: '/docs/level.webp', width: 980, height: 460, alt: 'A piano roll with Keys on and, under it, the level of every note as a bar: low for the notes played softly, high for the ones played hard.' },
             { file: '/docs/played.webp', width: 620, height: 80, alt: 'The foot of a pattern\'s sound controls: Played by a synth plugged in over MIDI, on channel 1.' },
         ],
-        html: `<p>Plug in a MIDI keyboard or pad and it plays at once: the pattern you are on, the notes of a piano roll or the sounds of a drum grid, where the pads go by the drum numbers every machine agrees on. A key sounds for as long as you hold it, and as loud as you pressed it. The sound settings, Devices at the top of the mixer, name the keyboards that are plugged in.</p>
+        html: `<p>Plug in a MIDI keyboard or pad and it plays at once: the pattern you are on, the notes of a piano roll or the sounds of a drum grid, where the pads go by the drum numbers every machine agrees on. A key sounds for as long as you hold it, and as loud as you pressed it. The sound settings, Devices at the top of the Output panel, name the keyboards that are plugged in.</p>
 <p>With Keys and Write on, what you play while the song plays is written in, and every note keeps how hard its key was pressed. <b>Level</b> under the roll shows it, and quieter notes are paler. Drag over the bars to change them, and double click one to put it back. A chord keeps how hard each of its keys was pressed. To change one note of a chord, choose it first: the Level bar of that step is then its own.</p>
 <p>A pattern can be played by a synth or another music program instead of Weft Loom. Open its sound controls and choose the synth under <b>Played by</b>, and a channel beside it. Each note goes out as hard as its level says, times the pattern's volume.</p>
 <p>In the sound settings, <b>Clock</b> sends the tempo of the song to a drum machine or a synth that follows one, with its start and its stop. <b>Follow</b> is the other way round: the song starts, stops and keeps the tempo of a drum machine or a program that sends a MIDI clock, and its own tempo comes back when that clock stops. <b>Learn the knobs and pads of a controller</b> lets a knob or a fader of yours turn a knob of the app: press the knob in the app, then turn yours. It turns that knob in every song that has the same pattern and the same knob. A pad or a button is learnt the same way: press a scene, or the M or S of a pattern, then the pad. It then switches that scene on the next bar, or mutes or solos that pattern, and plays no note. What is learnt is listed there, to forget one.</p>
@@ -198,12 +198,12 @@ export const DOCS: DocSection[] = [
     },
     {
         id: 'mixer',
-        title: 'The mixer',
+        title: 'Output and mix',
         pictures: [
-            { file: '/docs/mixer.webp', width: 300, height: 338, alt: 'The mixer: pan, low, mid and high knobs, a limiter, a volume fader and two meters.' },
+            { file: '/docs/mixer.webp', width: 300, height: 338, alt: 'The Output panel: pan, low, mid and high knobs, a limiter, a volume fader and two meters.' },
             { file: '/docs/strips.webp', width: 980, height: 422, alt: 'The Song panel switched to Mix: a strip for each pattern with a meter, a volume fader, pan, low cut, cutoff, room, delay, and M and S.' },
         ],
-        html: `<p>Volume, pan, low, mid and high for everything you hear, with a limiter and two meters.</p>
+        html: `<p>The <b>Output</b> panel, at the top of the left column, has volume, pan, low, mid and high for everything you hear, with a limiter and two meters. It starts folded to its heading: press its arrow to open it.</p>
 <p>It is how the song sounds on your machine and not part of the song. A file you export, and someone you jam with, get the song without it.</p>
 <p>Each pattern has a strip of its own as well. In the Song panel switch from Bars to <b>Mix</b>: a meter, a volume fader, pan, low cut, cutoff, room and delay for every pattern, side by side, with M and S. These are the pattern's own knobs, so they are part of the song.</p>`,
     },
@@ -211,7 +211,7 @@ export const DOCS: DocSection[] = [
         id: 'devices',
         title: 'Microphone and output',
         pictures: [{ file: '/docs/devices.webp', width: 460, height: 604, alt: 'The sound settings: a list to choose the microphone from, a list to choose the output from, and a button that plays a short note.' }],
-        html: `<p>Weft Loom records from the microphone the system uses and plays through the system's output, until you choose otherwise. Press <b>Devices</b> at the top of the mixer, or choose Sound Settings in the File menu.</p>
+        html: `<p>Weft Loom records from the microphone the system uses and plays through the system's output, until you choose otherwise. Press <b>Devices</b> at the top of the Output panel, or choose Sound Settings in the File menu.</p>
 <p><b>Microphone</b> is what a take and your voice in a jam are made with. <b>Output</b> is what the song is played through, and Test plays a short note there. If the list of outputs is empty, press Show the outputs: a window is only told what it could play through once it may use the microphone. Nothing is recorded.</p>
 <p>Both go back to the system's own when what you chose is unplugged.</p>`,
     },

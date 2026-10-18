@@ -51,15 +51,18 @@ export const kitLabel = (name: string): string =>
         .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
         .replace(/([a-z])(\d)/g, '$1 $2')
 
+// The recorded grand piano is told apart from the General MIDI one, which is called Piano too.
 export const soundLabel = (name: string): string =>
-    sentence(
-        name
-            .replace(/^gm_/, '')
-            .replace(/_/g, ' ')
-            .replace(/([a-z])(\d)/g, '$1 $2')
-            .replace(/^epiano/, 'electric piano')
-            .replace(/^fx /, 'effect '),
-    )
+    name === 'piano'
+        ? 'Grand piano'
+        : sentence(
+              name
+                  .replace(/^gm_/, '')
+                  .replace(/_/g, ' ')
+                  .replace(/([a-z])(\d)/g, '$1 $2')
+                  .replace(/^epiano/, 'electric piano')
+                  .replace(/^fx /, 'effect '),
+          )
 
 export function catalogue(raw: RawSound[], kitNames: string[]): SoundItem[] {
     const cased = new Map(kitNames.map((name) => [name.toLowerCase(), name]))

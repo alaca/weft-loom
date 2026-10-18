@@ -89,8 +89,7 @@ export function CodePane() {
             <Divider side="left" label="Width of the code" width={() => pane.getBoundingClientRect().width} onDrag={dragCode} onUsual={() => usualWidth('code')} />
             <div class="code-h">
                 <h2>Code</h2>
-                <div class="grow" />
-                <span class="sync" data-kind={status().kind} title={status().about}>
+                <span class="sync" data-kind={status().kind} title={status().about ?? status().text}>
                     <i />
                     <span data-testid="code-status">{status().text}</span>
                 </span>
