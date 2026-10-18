@@ -4,7 +4,7 @@ import type { CheckMenuItem as Tick, MenuItem as Item, Submenu as Sub } from '@t
 // song is put at the top of its File menu, what can be shown and hidden in the window at the
 // top of its View menu, and the docs and looking for a newer version at the top of its Help
 // menu. In a browser there is no such menu and nothing happens.
-export type MenuEntry = { id: string; text: string; keys?: string; checked?: () => boolean; enabled?: () => boolean; action: () => void } | 'line'
+export type MenuEntry = { id: string; text: string; keys?: string; checked?: () => boolean; enabled?: () => boolean; action: () => void } | { text: string; items: MenuEntry[] } | 'line'
 
 const inDesktop = () => '__TAURI_INTERNALS__' in window
 
@@ -35,12 +35,16 @@ export async function installMenus(menus: Record<string, MenuEntry[]>, quit?: ()
             if (item instanceof Submenu) there.set(text, item)
             names.push(text)
         }
-        for (const [name, given] of Object.entries(menus)) {
-            const entries: MenuEntry[] = name === 'File' && !there.has(name) && quit ? [...given, 'line', { id: 'weft-file-quit', text: 'Quit', keys: 'CmdOrCtrl+Q', action: quit }] : given
-            const made = []
+        type Made = Awaited<ReturnType<typeof MenuItem.new>> | Awaited<ReturnType<typeof CheckMenuItem.new>> | Awaited<ReturnType<typeof PredefinedMenuItem.new>> | Sub
+        const build = async (entries: MenuEntry[]): Promise<Made[]> => {
+            const made: Made[] = []
             for (const entry of entries) {
                 if (entry === 'line') {
                     made.push(await PredefinedMenuItem.new({ item: 'Separator' }))
+                    continue
+                }
+                if ('items' in entry) {
+                    made.push(await Submenu.new({ text: entry.text, items: await build(entry.items) }))
                     continue
                 }
                 const about = { id: entry.id, text: entry.text, accelerator: entry.keys, enabled: entry.enabled?.() ?? true, action: entry.action }
@@ -49,6 +53,11 @@ export async function installMenus(menus: Record<string, MenuEntry[]>, quit?: ()
                 if (entry.enabled) gates.push({ item, enabled: entry.enabled })
                 made.push(item)
             }
+            return made
+        }
+        for (const [name, given] of Object.entries(menus)) {
+            const entries: MenuEntry[] = name === 'File' && !there.has(name) && quit ? [...given, 'line', { id: 'weft-file-quit', text: 'Quit', keys: 'CmdOrCtrl+Q', action: quit }] : given
+            const made = await build(entries)
             const before = there.get(name)
             if (before) await before.insert([...made, await PredefinedMenuItem.new({ item: 'Separator' })], 0)
             else {

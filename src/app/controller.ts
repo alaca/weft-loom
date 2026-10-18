@@ -24,6 +24,8 @@ import { cleanPresetName, LIBRARY, presetCalls, presetEdits, previewText, PREVIE
 import { keeping } from '../library/kept'
 import { allSnippets as withStarters, cleanSnippetName, CODE_MOST, readSnippets, withSnippet, writeSnippets, type Snippet } from '../library/snippets'
 import { cleanName, createShelf, freeTitle, infoOf, NEW_SONG, newId, UNTITLED, type SongInfo, type SongRecord } from '../library/shelf'
+import { readTheme, THEMES, themeShown, type ThemeChoice } from '../library/theme'
+import { drawInTheme } from '../engine/theme'
 import { CODE_LEAST, DEFAULT_LAYOUT, fitShare, fitWidth, isUsual, LEFT_PANELS, MIDDLE_LEAST, readLayout, SOUNDS_LEAST, SOUNDS_WIDTH, usualCode, type Layout, type LeftPanel, type ViewMode } from '../library/layout'
 import { fitSoundName, readSongFile, readSource, renameSound, SONG_FILE, SOUND_NAME, soundsUsed, writeSongFileInTurns, type PackedSound } from '../library/songfile'
 import { DEFAULT_MIX, fitMix, readMix, type Mix } from '../library/mix'
@@ -155,8 +157,10 @@ import {
     setExporting,
     setGridNotes,
     setSongShown,
+    setThemeChoice,
     setWaveShown,
     songShown,
+    themeChoice,
     waveShown,
     codeWidth,
     setCodeWidth,
@@ -575,6 +579,8 @@ export async function mount(root: HTMLElement): Promise<void> {
             { id: 'weft-view-wave', text: 'Waveform', checked: waveShown, action: toggleWaveform },
             { id: 'weft-view-song', text: 'Song Panel', checked: songShown, action: toggleSongPanel },
             'line',
+            { text: 'Theme', items: THEMES.map((theme) => ({ id: `weft-theme-${theme.id}`, text: theme.label, checked: () => themeChoice() === theme.id, action: () => chooseTheme(theme.id) })) },
+            'line',
             { id: 'weft-view-fold', text: 'Fold All Patterns', action: foldAllStrips },
             { id: 'weft-view-unfold', text: 'Unfold All Patterns', action: unfoldAllStrips },
             'line',
@@ -594,6 +600,7 @@ export async function mount(root: HTMLElement): Promise<void> {
     createRoot(() => {
         createEffect(() => {
             layoutNow()
+            themeChoice()
             tickMenu()
         })
         createEffect(() => engine.setEnd(songEnd()))
@@ -1251,6 +1258,25 @@ function applyLayout(layout: Layout) {
 }
 
 const keepLayout = () => keeping.setItem(LAYOUT_KEY, JSON.stringify(layoutNow()))
+
+// The theme is put on the page, and Strudel's drawings are given its colours. Match the system
+// follows the system as it changes, also while the app is open.
+const THEME_KEY = 'weft.theme'
+const systemLight = window.matchMedia('(prefers-color-scheme: light)')
+function showTheme() {
+    document.documentElement.dataset.theme = themeShown(themeChoice(), systemLight.matches)
+    drawInTheme()
+}
+
+export function chooseTheme(choice: ThemeChoice) {
+    setThemeChoice(choice)
+    keeping.setItem(THEME_KEY, choice)
+    showTheme()
+}
+
+setThemeChoice(readTheme(keeping.getItem(THEME_KEY)))
+showTheme()
+systemLight.addEventListener('change', () => themeChoice() === 'system' && showTheme())
 
 applyLayout(readLayout(keeping.getItem(LAYOUT_KEY)))
 

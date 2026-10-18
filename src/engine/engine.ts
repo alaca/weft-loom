@@ -47,7 +47,7 @@ import { addOwnSound, fontAhead, kitNames, loadModules, loadSamples, removeOwnSo
 import { createReplay } from './replay'
 import { inSharedRoom, type From, type Rooms } from './room'
 import { createSync, heard, syncSlot, type Sync } from './sync'
-import { registerTheme } from './theme'
+import { drawInTheme, registerTheme } from './theme'
 import { startTicking, stopTicking } from './ticker'
 import { restedOn, restUnpluggedWorklets } from './unplug'
 
@@ -1233,6 +1233,7 @@ export function createEngine(): Engine {
 
             dress = () => {
                 mirror.updateSettings(editorSettings())
+                drawInTheme()
                 mirror.editor.dispatch({
                     effects: StateEffect.appendConfig.of([
                         history({ joinToEvent: (tr) => tr.annotation(sameGesture) === true }),

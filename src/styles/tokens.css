@@ -1,10 +1,13 @@
 :root {
+    color-scheme: dark;
     --vat: #18181a;
     --cloth: #1f1f22;
     --cloth-2: #28282c;
     --cloth-3: #38383e;
     --seam: #3a3a40;
     --seam-soft: #2b2b2f;
+    --edge: #4c4c54;
+    --deep: #000000;
     --linen: #ece6d6;
     --linen-2: #b9b6af;
     --linen-3: #8d8b86;
@@ -16,4 +19,62 @@
     --ui: 'Archivo Variable', system-ui, sans-serif;
     --mono: 'Martian Mono Variable', ui-monospace, Menlo, monospace;
     --voice: 'Piazzolla Variable', Georgia, serif;
+}
+
+/* The other themes are the same window in other colours (library/theme.ts). Linen is always the
+   colour of the writing and vat the deepest ground, so in Daylight they swap places. */
+:root[data-theme='ink'] {
+    --vat: #0e1117;
+    --cloth: #141922;
+    --cloth-2: #1b2230;
+    --cloth-3: #28324a;
+    --seam: #2a3344;
+    --seam-soft: #1c2330;
+    --edge: #3a4558;
+    --linen: #e4ebf5;
+    --linen-2: #a9b4c4;
+    --linen-3: #77839a;
+    --madder: #ff6b55;
+    --saffron: #f4c04a;
+    --woad: #6fb0ff;
+    --lichen: #7fd6a4;
+    --orchil: #c99bff;
+}
+
+:root[data-theme='studio'] {
+    --vat: #26272a;
+    --cloth: #303135;
+    --cloth-2: #393a3f;
+    --cloth-3: #46484e;
+    --seam: #4a4c52;
+    --seam-soft: #36373c;
+    --edge: #5a5c63;
+    --linen: #f2f1ee;
+    --linen-2: #c3c2bd;
+    --linen-3: #9a9994;
+    --madder: #f0643f;
+    --saffron: #f2c230;
+    --woad: #5fb3e8;
+    --lichen: #a6d36a;
+    --orchil: #e389c9;
+}
+
+:root[data-theme='daylight'] {
+    color-scheme: light;
+    --vat: #e7e1d4;
+    --cloth: #f4f0e7;
+    --cloth-2: #fbf9f4;
+    --cloth-3: #e0d9ca;
+    --seam: #cfc7b6;
+    --seam-soft: #e3ddd0;
+    --edge: #c2b9a6;
+    --deep: #8a7c62;
+    --linen: #262420;
+    --linen-2: #55514a;
+    --linen-3: #86817a;
+    --madder: #cf452b;
+    --saffron: #c38d0e;
+    --woad: #2f7bcf;
+    --lichen: #4f8f2f;
+    --orchil: #a24fa6;
 }

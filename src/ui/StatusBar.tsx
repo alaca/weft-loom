@@ -1,9 +1,9 @@
-import { createSignal, onCleanup, onMount, Show } from 'solid-js'
-import { layoutIsUsual, resetLayout } from '../app/controller'
+import { createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import { chooseTheme, layoutIsUsual, resetLayout } from '../app/controller'
 import { DEMO } from '../demo/demo'
-import { engineState } from '../stores/song'
+import { THEMES, type ThemeChoice } from '../library/theme'
+import { engineState, themeChoice } from '../stores/song'
 import { MOD } from './keys'
-
 
 const SOUNDS = {
     loading: 'Loading sounds',
@@ -51,6 +51,12 @@ export function StatusBar() {
                     Reset layout
                 </button>
             </Show>
+            <label class="sbar-t" title="How the window looks on this machine">
+                Theme
+                <select aria-label="Theme" value={themeChoice()} onChange={(event) => chooseTheme(event.currentTarget.value as ThemeChoice)}>
+                    <For each={THEMES}>{(theme) => <option value={theme.id}>{theme.label}</option>}</For>
+                </select>
+            </label>
             <span>
                 Free and open source. Sound engine: <b>Strudel</b>
             </span>

@@ -8,7 +8,7 @@ export function Mark() {
                 <path d="M250 512h524" stroke="#ecb739" />
                 <path d="M250 652h524" stroke="#79b4f2" />
             </g>
-            <g fill="#ece6d6">
+            <g style={{ fill: 'var(--linen)' }}>
                 <rect x="352" y="300" width="56" height="424" rx="28" />
                 <rect x="484" y="300" width="56" height="424" rx="28" />
                 <rect x="616" y="300" width="56" height="424" rx="28" />

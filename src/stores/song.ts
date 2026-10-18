@@ -1,6 +1,7 @@
 import { createSignal } from 'solid-js'
 import type { LeftPanel } from '../library/layout'
 import { DEFAULT_MIX, type Mix } from '../library/mix'
+import type { ThemeChoice } from '../library/theme'
 import type { EngineState } from '../engine/engine'
 import type { SongInfo, SongRecord } from '../library/shelf'
 import type { ViewMode } from '../library/layout'
@@ -28,6 +29,7 @@ export const [viewMode, setViewMode] = createSignal<ViewMode>('both')
 export type PlayMode = 'song' | 'live'
 export const [playMode, setPlayModeValue] = createSignal<PlayMode>('song')
 export const [waveShown, setWaveShown] = createSignal(false)
+export const [themeChoice, setThemeChoice] = createSignal<ThemeChoice>('loom')
 export const [songShown, setSongShown] = createSignal(true)
 export const [soundsWidth, setSoundsWidth] = createSignal<number | null>(null)
 export const [codeWidth, setCodeWidth] = createSignal<number | null>(null)
