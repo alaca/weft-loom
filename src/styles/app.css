@@ -218,9 +218,10 @@ button.rn:hover { border-color: var(--linen-3); }
    and the header keeps to one line. */
 .code { container-type: inline-size; }
 @container (max-width: 520px) { .upd > .btn kbd { display: none; } }
-/* On a narrow column the heading's word goes, so that what the code is doing can still be read. */
-@container (max-width: 440px) {
-    .code-h { gap: 0 7px; padding: 7px 10px 7px 14px; }
+/* On a narrow column the heading closes up, and on a narrower one its word goes, so that what
+   the code is doing can still be read. */
+@container (max-width: 470px) { .code-h { gap: 0 7px; padding: 7px 10px 7px 14px; } }
+@container (max-width: 400px) {
     .code-h h2 { display: none; }
     .sync { justify-content: flex-start; }
 }
