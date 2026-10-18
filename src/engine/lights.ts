@@ -1,5 +1,3 @@
-import { isClick } from './metronome'
-
 // While a song plays, Strudel lights the notes that sound in the code, and draws the pictures
 // that stand in it. To know which notes those are it asks the whole song on every frame, with
 // the code out of sight too, and for a long song that question is most of what the window does.
@@ -44,7 +42,7 @@ export function lightNotes(mirror: any, root: HTMLElement): (hap: any) => void {
         const from = Math.floor(time + behind)
         if (!stretch || stretch.from !== from) {
             const haps = scheduler.pattern.queryArc(from, Math.ceil(time + ahead) + 1)
-            stretch = { from, haps: haps.filter((hap: any) => hap.hasOnset() && !isClick(hap)) }
+            stretch = { from, haps: haps.filter((hap: any) => hap.hasOnset()) }
         }
         return stretch.haps.filter((hap) => hap.endClipped >= time + behind && hap.whole.begin <= time + ahead)
     }
@@ -56,7 +54,7 @@ export function lightNotes(mirror: any, root: HTMLElement): (hap: any) => void {
         if (owed) {
             const [from, to] = owed
             owed = null
-            held = held.concat(scheduler.pattern.queryArc(from, to).filter((hap: any) => hap.hasOnset() && !isClick(hap)))
+            held = held.concat(scheduler.pattern.queryArc(from, to).filter((hap: any) => hap.hasOnset()))
         }
         const kept = held.filter(notEnded(time))
         drawer.visibleHaps = kept
