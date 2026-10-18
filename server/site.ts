@@ -858,8 +858,6 @@ export function createSite(options: SiteOptions): Promise<Site> {
         return note(200, 'The report is kept', ['It is kept with the song and the time it was sent.'], back)
     }
 
-    // What the app hands over with a problem, as it may be written in an address or a form.
-    const detailsOf = (given: { get: (name: string) => unknown }) => ({ version: clean(given.get('version'), 40), system: clean(given.get('system'), 160), errors: clean(given.get('errors'), 1200) })
 
     // A problem with the app, said by whoever had it. It is kept and handed on as a report is.
     function problemReported(body: any, from: string): Answer {
@@ -868,7 +866,7 @@ export function createSite(options: SiteOptions): Promise<Site> {
         if (!text) return note(400, 'The report says nothing', ['Say what went wrong, then send it again.'], { href: '/report', label: 'Write it again' })
         if (tooMany(`problem from ${from}`)) return note(429, 'Too many reports', ['Too many reports came from here. Wait a quarter of an hour and send it again.'], back)
         if (kept.problems.length >= MOST_REPORTS) return note(503, 'The report was not kept', ['The site cannot take more reports just now.'], back)
-        const problem: Problem = { text, email: emailOf(body?.email), ...detailsOf({ get: (name) => body?.[name] }), at: now() }
+        const problem: Problem = { text, email: emailOf(body?.email), version: clean(body?.version, 40), system: clean(body?.system, 160), errors: clean(body?.errors, 1200), at: now() }
         kept.problems.push(problem)
         keep()
         try {
@@ -897,7 +895,7 @@ export function createSite(options: SiteOptions): Promise<Site> {
         if (get && path === '/docs') return { status: 200, html: docsPage(around) }
         if (get && path === '/download') return { status: 200, html: downloadPage(around, built()) }
         if (get && path === '/packs') return { status: 200, html: packsPage(around, packsNow()) }
-        if (get && path === '/report') return { status: 200, html: problemPage(around, detailsOf(url.searchParams)) }
+        if (get && path === '/report') return { status: 200, html: problemPage(around) }
         if (post && path === '/report') return problemReported(body, from)
         const packed = /^\/packs\/([a-z0-9]+)\.(weftpack|mp3)$/.exec(path)
         if (packed && get) {

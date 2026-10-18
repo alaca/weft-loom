@@ -519,15 +519,13 @@ describe('a folder of packs', () => {
 })
 
 describe('a problem reported from the app', () => {
-    it('shows what the app sends with it, keeps what is written and hands it on', async () => {
+    it('has room for what the app sends with it, keeps what is written and hands it on', async () => {
         await site.close()
         const told: unknown[] = []
         await start({ problem: (problem) => void told.push(problem) })
-        const html = await page('/report?version=0.1.14&system=macOS%20(Macintosh)&errors=%3Cb%3Eoops%3C%2Fb%3E')
-        expect(html).toContain('<dt>Version</dt><dd>0.1.14</dd>')
-        expect(html).toContain('<dd>&#60;b&#62;oops&#60;/b&#62;</dd>')
-        expect(html).not.toContain('<b>oops</b>')
-        expect(html).toContain('<input type="hidden" name="version" value="0.1.14">')
+        const html = await page('/report')
+        expect(html).toContain('<div data-detail="version" hidden><dt>Version</dt><dd></dd><input type="hidden" name="version"></div>')
+        expect(html).toContain('<div data-details hidden>')
 
         expect((await send('/report', { text: '   ' })).status).toBe(400)
         const answer = await send('/report', { text: 'The sound stops\nafter a minute', email: 'Someone@Example.com', version: '0.1.14', system: 'macOS', errors: 'oops' })

@@ -25,12 +25,14 @@ export function systemNow(agent = navigator.userAgent): string {
     return inside ? `${name} (${inside})` : name
 }
 
+// What goes with the report is put after the # of the address, which a browser keeps to itself:
+// the site's page puts it into the form, and it reaches the site only when the form is sent.
 export function problemAddress(site: string, version: string | null, system: string, errors: string[]): string {
     const asked = new URLSearchParams()
     if (version) asked.set('version', version)
     asked.set('system', system)
     if (errors.length) asked.set('errors', errors.join(' | '))
-    return `${site}/report?${asked}`
+    return `${site}/report#${asked}`
 }
 
 export async function reportProblem() {

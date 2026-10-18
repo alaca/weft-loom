@@ -494,12 +494,16 @@ ${pasted(around, 'How Weft Loom works', DOCS_ABOUT)}`)
 // be changed when what is kept changes.
 // How much a report of a problem may say.
 export const PROBLEM_LIMIT = 4000
-// What the app hands over when it opens the form: its version, the system it runs on, and the
-// last things that went wrong in it. They are shown, and sent only with the report.
-export type ProblemDetails = { version: string; system: string; errors: string }
+// What the app hands over when it opens the form, its version, the system it runs on and the last
+// things that went wrong in it, is after the # of the address, which the site never sees. The
+// page's script puts it in the form and shows it; it reaches the site only with the report.
+const DETAILS: [string, string][] = [
+    ['version', 'Version'],
+    ['system', 'System'],
+    ['errors', 'What went wrong in the app'],
+]
 
-export function problemPage(around: Around, details: ProblemDetails): string {
-    const shown = (label: string, value: string) => (value ? html`<dt>${label}</dt><dd>${value}</dd>` : '')
+export function problemPage(around: Around): string {
     const main = html`<main class="wrap page mid">
     <div class="card note wide">
         <h1>Report a problem</h1>
@@ -507,13 +511,10 @@ export function problemPage(around: Around, details: ProblemDetails): string {
         <form class="prob" method="post" action="/report">
             <label><span class="cap">What happened</span><textarea class="in" name="text" rows="6" maxlength="${PROBLEM_LIMIT}" required></textarea></label>
             <label><span class="cap">Your email, if you want an answer</span><input class="in" type="email" name="email" maxlength="254" autocomplete="email"></label>
-            ${details.version || details.system || details.errors ? html`<div>
+            <div data-details hidden>
                 <span class="cap">Sent with it</span>
-                <dl>${shown('Version', details.version)}${shown('System', details.system)}${shown('What went wrong in the app', details.errors)}</dl>
-            </div>` : ''}
-            <input type="hidden" name="version" value="${details.version}">
-            <input type="hidden" name="system" value="${details.system}">
-            <input type="hidden" name="errors" value="${details.errors}">
+                <dl>${DETAILS.map(([name, label]) => html`<div data-detail="${name}" hidden><dt>${label}</dt><dd></dd><input type="hidden" name="${name}"></div>`)}</dl>
+            </div>
             <button class="btn go" type="submit">Send the report</button>
         </form>
         ${around.source ? html`<p class="tail">You can also write it as an issue where the <a href="${around.source}/issues" rel="noopener">source code</a> is.</p>` : ''}

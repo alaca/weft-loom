@@ -156,3 +156,20 @@ function docs(menu) {
 }
 
 document.addEventListener('DOMContentLoaded', () => document.querySelectorAll('.docs-n').forEach(docs))
+
+// The report of a problem. What the app hands over with it is after the # of the address, which
+// the browser keeps to itself; it goes into the form here and is shown before it is sent.
+function problemDetails() {
+    const box = document.querySelector('[data-details]')
+    if (!box) return
+    const given = new URLSearchParams(location.hash.slice(1))
+    for (const row of box.querySelectorAll('[data-detail]')) {
+        const value = (given.get(row.dataset.detail) ?? '').trim().slice(0, 1200)
+        if (!value) continue
+        row.querySelector('dd').textContent = value
+        row.querySelector('input').value = value
+        row.hidden = false
+        box.hidden = false
+    }
+}
+document.addEventListener('DOMContentLoaded', problemDetails)
