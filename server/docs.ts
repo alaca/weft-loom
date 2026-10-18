@@ -210,7 +210,7 @@ export const DOCS: DocSection[] = [
     {
         id: 'devices',
         title: 'Microphone and output',
-        pictures: [{ file: '/docs/devices.webp', width: 460, height: 604, alt: 'The sound settings: a list to choose the microphone from, a list to choose the output from, and a button that plays a short note.' }],
+        pictures: [{ file: '/docs/devices.webp', width: 460, height: 614, alt: 'The sound settings: a list to choose the microphone from, a list to choose the output from, and a button that plays a short note.' }],
         html: `<p>Weft Loom records from the microphone the system uses and plays through the system's output, until you choose otherwise. Press <b>Devices</b> at the top of the Output panel, or choose Sound Settings in the File menu.</p>
 <p><b>Microphone</b> is what a take and your voice in a jam are made with. <b>Output</b> is what the song is played through, and Test plays a short note there. If the list of outputs is empty, press Show the outputs: a window is only told what it could play through once it may use the microphone. Nothing is recorded.</p>
 <p>Both go back to the system's own when what you chose is unplugged.</p>`,
