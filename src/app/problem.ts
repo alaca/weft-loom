@@ -1,7 +1,3 @@
-import { openInBrowser } from '../desktop/browser'
-import { versionNow } from '../desktop/update'
-import { SITE } from '../site/api'
-
 // A problem is reported on the site, in a form that says what is sent with it: the version of the
 // app, the system it runs on, and the last few things that went wrong in it. Nothing of that leaves
 // the machine until the form is sent, and nothing is noted but the message of each.
@@ -29,15 +25,16 @@ export function systemNow(agent = navigator.userAgent): string {
     return inside ? `${name} (${inside})` : name
 }
 
-export function problemAddress(version: string | null, system: string, errors: string[]): string {
+export function problemAddress(site: string, version: string | null, system: string, errors: string[]): string {
     const asked = new URLSearchParams()
     if (version) asked.set('version', version)
     asked.set('system', system)
     if (errors.length) asked.set('errors', errors.join(' | '))
-    return `${SITE}/report?${asked}`
+    return `${site}/report?${asked}`
 }
 
 export async function reportProblem() {
+    const [{ openInBrowser }, { versionNow }, { SITE }] = await Promise.all([import('../desktop/browser'), import('../desktop/update'), import('../site/api')])
     const version = await versionNow().catch(() => null)
-    await openInBrowser(problemAddress(version, systemNow(), wrong))
+    await openInBrowser(problemAddress(SITE, version, systemNow(), wrong))
 }
