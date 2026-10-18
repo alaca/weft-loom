@@ -27,7 +27,7 @@ export const [viewMode, setViewMode] = createSignal<ViewMode>('both')
 // bars had been written.
 export type PlayMode = 'song' | 'live'
 export const [playMode, setPlayModeValue] = createSignal<PlayMode>('song')
-export const [waveShown, setWaveShown] = createSignal(true)
+export const [waveShown, setWaveShown] = createSignal(false)
 export const [songShown, setSongShown] = createSignal(true)
 export const [soundsWidth, setSoundsWidth] = createSignal<number | null>(null)
 export const [codeWidth, setCodeWidth] = createSignal<number | null>(null)

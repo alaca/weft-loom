@@ -6,11 +6,10 @@ const first = (code: string) => analyze(code).patterns[0]
 const BASS = 'bass: note("d2").s("sawtooth").lpf(slider(1200, 200, 4000)).lpq(8).pan(sine.slow(4)).gain(0.6).mul(postgain(0.7))'
 
 describe('favourites', () => {
-    it('shows the controls that are in the code, in code order, without volume and pan', () => {
+    it('shows the controls that are in the code, in code order, without volume, pan and input', () => {
         expect(favourites(first(BASS)).map((v) => [v.fn, v.state])).toEqual([
             ['lpf', 'live'],
             ['lpq', 'number'],
-            ['gain', 'number'],
         ])
     })
 
@@ -107,24 +106,25 @@ describe('panelFor', () => {
 
 describe('volumeOf', () => {
     it('is the level after the effects, and not the gain that goes into them', () => {
-        expect(volumeOf(first(BASS))).toMatchObject({ fn: 'volume', label: 'Volume', state: 'number', value: 0.7 })
+        expect(volumeOf(first(BASS))).toMatchObject({ fn: 'volume', label: 'Volume', state: 'number', value: 0.7, text: '70%' })
         expect(volumeOf(first('x: note("c").mul(postgain(slider(0.4, 0, 1.5)))'))).toMatchObject({ state: 'live', value: 0.4, max: 1.5 })
         expect(volumeOf(first('x: note("c").gain(0.3)'))).toMatchObject({ state: 'faint' })
     })
 
     it('is faint at full when there is none', () => {
-        expect(volumeOf(first('x: note("c")'))).toMatchObject({ fn: 'volume', state: 'faint', value: 1, max: 1.5 })
+        expect(volumeOf(first('x: note("c")'))).toMatchObject({ fn: 'volume', state: 'faint', value: 1, max: 1.5, text: '100%' })
     })
 })
 
 describe('panOf', () => {
     it('reads the pan that is in the code', () => {
-        expect(panOf(first('x: note("c").pan(slider(0.2, 0, 1))'))).toMatchObject({ fn: 'pan', state: 'live', value: 0.2 })
+        expect(panOf(first('x: note("c").pan(slider(0.2, 0, 1))'))).toMatchObject({ fn: 'pan', state: 'live', value: 0.2, text: '60% left' })
+        expect(panOf(first('x: note("c").pan(0.75)'))).toMatchObject({ state: 'number', text: '50% right' })
         expect(panOf(first(BASS))).toMatchObject({ fn: 'pan', state: 'locked', text: 'in code' })
     })
 
     it('is faint in the middle when there is none', () => {
-        expect(panOf(first('x: note("c")'))).toMatchObject({ fn: 'pan', state: 'faint', value: 0.5, min: 0, max: 1 })
+        expect(panOf(first('x: note("c")'))).toMatchObject({ fn: 'pan', state: 'faint', value: 0.5, min: 0, max: 1, text: 'Centre' })
     })
 })
 

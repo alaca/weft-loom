@@ -1,14 +1,15 @@
 // How the window is laid out: which parts are shown and how wide the two side columns are.
 // The mixer is on the left with the sounds and the jam under it, the controls in the middle, the
-// code on the right. The mixer and the sounds are shown from the first start; the jam is not.
+// code on the right. The mixer and the sounds are shown from the first start; the jam and the
+// waveform are not.
 // Each of the three can be folded to its heading. A width of null means the usual one; a width that was dragged is kept in pixels. How
 // the left column is shared between the sounds and the jam is kept as the part the sounds take.
 export type ViewMode = 'controls' | 'both' | 'code'
 export type LeftPanel = 'mixer' | 'sounds' | 'jams'
 export const LEFT_PANELS: LeftPanel[] = ['mixer', 'sounds', 'jams']
-export type Layout = { view: ViewMode; sounds: boolean; jams: boolean; mixer: boolean; wave: boolean; song: boolean; soundsWidth: number | null; codeWidth: number | null; soundsShare: number | null; folded: LeftPanel[] }
+export type Layout = { view: ViewMode; sounds: boolean; jams: boolean; mixer: boolean; scope: boolean; song: boolean; soundsWidth: number | null; codeWidth: number | null; soundsShare: number | null; folded: LeftPanel[] }
 
-export const DEFAULT_LAYOUT: Layout = { view: 'both', sounds: true, jams: false, mixer: true, wave: true, song: true, soundsWidth: null, codeWidth: null, soundsShare: null, folded: [] }
+export const DEFAULT_LAYOUT: Layout = { view: 'both', sounds: true, jams: false, mixer: true, scope: false, song: true, soundsWidth: null, codeWidth: null, soundsShare: null, folded: [] }
 export const SOUNDS_SHARE = 0.4
 export const SHARE_LEAST = 0.2
 export const SHARE_MOST = 0.75
@@ -34,7 +35,7 @@ export function readLayout(text: string | null): Layout {
             sounds: shown(kept.sounds, DEFAULT_LAYOUT.sounds),
             jams: shown(kept.jams, DEFAULT_LAYOUT.jams),
             mixer: shown(kept.mixer, DEFAULT_LAYOUT.mixer),
-            wave: shown(kept.wave, DEFAULT_LAYOUT.wave),
+            scope: shown(kept.scope, DEFAULT_LAYOUT.scope),
             song: shown(kept.song, DEFAULT_LAYOUT.song),
             soundsWidth: width(kept.soundsWidth),
             codeWidth: width(kept.codeWidth),

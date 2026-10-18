@@ -42,13 +42,24 @@ const MAX_FAVOURITES = 4
 
 const withUnit = (text: string, unit: string) => (unit ? `${text} ${unit}` : text)
 
+// A value as it is said under its knob: in the control's own words when it has them, the way the
+// output panel says them, or else as a number and its unit.
+export function shownAs(fn: string, value: number, min: number, max: number): string {
+    const def = findDef(fn)
+    return def?.show ? def.show(value) : withUnit(writeNumber(value, min, max), def?.unit ?? '')
+}
+const shownFromTo = (fn: string, from: number, to: number, min: number, max: number): string => {
+    const show = findDef(fn)?.show
+    return show ? `${show(from)} to ${show(to)}` : `${writeNumber(from, min, max)} to ${shownAs(fn, to, min, max)}`
+}
+
 export function callFor(block: PatternBlock, fn: string): Call | undefined {
     const names = findDef(fn)?.names ?? [fn]
     return block.calls.find((call) => names.includes(call.name))
 }
 
 function faint(def: ControlDef): ControlView {
-    return { fn: def.fn, label: def.label, group: def.group, describe: def.describe, state: 'faint', value: def.initial, min: def.min, max: def.max, scale: def.scale, text: 'off' }
+    return { fn: def.fn, label: def.label, group: def.group, describe: def.describe, state: 'faint', value: def.initial, min: def.min, max: def.max, scale: def.scale, text: def.show ? def.show(def.initial) : 'off' }
 }
 
 type Value = Extract<Arg, { kind: 'number' | 'slider' }>
@@ -86,21 +97,20 @@ function viewOfCall(call: Call): ControlView | null {
         group: def?.group ?? ('pattern' as Group),
         describe: def?.describe ?? `The slider in .${call.name}( )`,
     }
-    const unit = def?.unit ?? ''
     if (arg.kind === 'slider') {
-        return { ...base, state: 'live', value: arg.value, min: arg.min, max: arg.max, scale: 'linear', text: withUnit(writeNumber(arg.value, arg.min, arg.max), unit) }
+        return { ...base, state: 'live', value: arg.value, min: arg.min, max: arg.max, scale: 'linear', text: shownAs(base.fn, arg.value, arg.min, arg.max) }
     }
     if (!def) return null
     if (arg.kind === 'number') {
         const min = Math.min(def.min, arg.value)
         const max = Math.max(def.max, arg.value)
-        return { ...base, state: 'number', value: arg.value, min, max, scale: def.scale, text: withUnit(writeNumber(arg.value, min, max), unit) }
+        return { ...base, state: 'number', value: arg.value, min, max, scale: def.scale, text: shownAs(def.fn, arg.value, min, max) }
     }
     const motion = readMotion(call)
     if (motion) {
         const min = Math.min(def.min, motion.from, motion.to)
         const max = Math.max(def.max, motion.from, motion.to)
-        return { ...base, state: 'moving', motion, value: motion.to, min, max, scale: def.scale, text: `${writeNumber(motion.from, min, max)} to ${withUnit(writeNumber(motion.to, min, max), unit)}` }
+        return { ...base, state: 'moving', motion, value: motion.to, min, max, scale: def.scale, text: shownFromTo(def.fn, motion.from, motion.to, min, max) }
     }
     const curve = def.wrap ? null : readCurve(call)
     if (curve) {
@@ -109,7 +119,7 @@ function viewOfCall(call: Call): ControlView | null {
         const high = Math.max(...numbers)
         const min = Math.min(def.min, low)
         const max = Math.max(def.max, high)
-        const text = low === high ? withUnit(writeNumber(high, min, max), unit) : `${writeNumber(low, min, max)} to ${withUnit(writeNumber(high, min, max), unit)}`
+        const text = low === high ? shownAs(def.fn, high, min, max) : shownFromTo(def.fn, low, high, min, max)
         return { ...base, state: 'drawn', curve: numbers, value: high, min, max, scale: def.scale, text }
     }
     // One sound of a drum kit can have a value for every step: a number for each, in one text.
@@ -149,10 +159,13 @@ export function drawableIn(block: PatternBlock): ControlView[] {
 }
 
 const MIX = MIX_CONTROLS
+// The row of knobs under what a pattern plays has one loudness in it, its Volume. How hard the
+// sound goes into its filter is among its sound's controls.
+const NOT_FAVOURITE = [...MIX, 'gain']
 
 export function favourites(block: PatternBlock): ControlView[] {
     return present(block)
-        .filter((view) => !MIX.includes(view.fn))
+        .filter((view) => !NOT_FAVOURITE.includes(view.fn))
         .slice(0, MAX_FAVOURITES)
 }
 
@@ -216,5 +229,5 @@ export function panOf(block: PatternBlock): ControlView {
     if (!pans.length || callFor(block, 'pan')) return mixOf(block, 'pan')
     const centre = pans.reduce((sum, pan) => sum + pan.view.value, 0) / pans.length
     const own = pans.some((pan) => pan.view.state !== 'faint')
-    return { ...mixOf(block, 'pan'), value: centre, text: writeNumber(centre, 0, 1), state: own ? 'number' : 'faint' }
+    return { ...mixOf(block, 'pan'), value: centre, text: shownAs('pan', centre, 0, 1), state: own ? 'number' : 'faint' }
 }

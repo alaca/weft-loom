@@ -2,8 +2,7 @@ import { muteOrLearn, soloOrLearn } from '../app/knobs'
 import { createEffect, createMemo, createSignal, For, Index, onCleanup, onMount, Show, untrack } from 'solid-js'
 import { codeNow, addVariantOf, colorAt, dropOnPattern, duplicatePattern, eventsOf, movePattern, openSounds, removePattern, removeVariantOf, renamePattern, restsNow, select, setControl, setMix, showVariant, songLengthNow, togglePanel, toggleStrip } from '../app/controller'
 import { MOST_VARIANTS, variantBars, variantName } from '../song/variants'
-import { writeNumber } from '../controls/catalog'
-import { favourites, panOf, volumeOf, type ControlView } from '../controls/views'
+import { favourites, panOf, shownAs, volumeOf, type ControlView } from '../controls/views'
 import { isDrums, readKit } from '../song/kit'
 import { readLaid } from '../song/audio'
 import { readFollower } from '../song/chords'
@@ -121,7 +120,7 @@ export function Strip(props: { id: string }) {
     // How loud the pattern is and where it sits come first in the row of knobs under what it
     // plays. Neither has to be in the code to be turned: it stands where the sound engine puts
     // it by itself, and the first turn writes its line.
-    const turnable = (view: ControlView): ControlView => (view.state === 'faint' ? { ...view, state: 'number', text: writeNumber(view.value, view.min, view.max) } : view)
+    const turnable = (view: ControlView): ControlView => (view.state === 'faint' ? { ...view, state: 'number', text: shownAs(view.fn, view.value, view.min, view.max) } : view)
     const mix = createMemo((): { fn: 'volume' | 'pan'; name: string; view: ControlView }[] =>
         block()
             ? [

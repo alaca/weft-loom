@@ -8,12 +8,12 @@ describe('readLayout', () => {
     })
 
     it('keeps what can be a layout and replaces the rest', () => {
-        expect(readLayout(JSON.stringify({ view: 'code', sounds: true, mixer: false, wave: false, song: 'no', soundsWidth: 301.6, codeWidth: -5 }))).toEqual({
+        expect(readLayout(JSON.stringify({ view: 'code', sounds: true, mixer: false, scope: true, song: 'no', soundsWidth: 301.6, codeWidth: -5 }))).toEqual({
             view: 'code',
             sounds: true,
             jams: false,
             mixer: false,
-            wave: false,
+            scope: true,
             song: true,
             soundsWidth: 302,
             codeWidth: null,
@@ -35,7 +35,7 @@ describe('isUsual', () => {
     it('is true only when nothing was changed', () => {
         expect(isUsual(DEFAULT_LAYOUT)).toBe(true)
         expect(isUsual({ ...DEFAULT_LAYOUT, codeWidth: 500 })).toBe(false)
-        expect(isUsual({ ...DEFAULT_LAYOUT, wave: false })).toBe(false)
+        expect(isUsual({ ...DEFAULT_LAYOUT, scope: true })).toBe(false)
     })
 })
 

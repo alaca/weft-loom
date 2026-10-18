@@ -89,11 +89,11 @@ export function MixStrips() {
                                                 max={volumeOf(now()).max}
                                                 usual={1}
                                                 text={volumeOf(now()).text}
-                                                about={`How loud ${id} is, after its effects. Double click for 1.`}
+                                                about={`How loud ${id} is, after its effects. Double click for 100%.`}
                                                 onChange={(value) => !stale() && setMix(id, 'volume', value)}
                                             />
                                         </div>
-                                        <b class="ms-v">{volumeOf(now()).state === 'faint' ? '1' : volumeOf(now()).text}</b>
+                                        <b class="ms-v">{volumeOf(now()).text}</b>
                                         <Knob small name={`Pan of ${id}`} of={id} view={panOf(now())} disabled={stale()} onChange={(value) => setMix(id, 'pan', value)} />
                                         <span class="cap">Pan</span>
                                         <div class="ms-k">

@@ -110,13 +110,21 @@ export function SoundPanel(props: { id: string; block: PatternBlock; only?: stri
         else setChoice(type)
     }
 
-    // Opened under a long grid, the controls would start out of sight. They are brought up far
-    // enough that their top shows.
+    // Opened under what the pattern plays, the controls may run out of sight. They are brought
+    // up as far as it takes to see them whole, but not so far that the top of the strip, with
+    // what the pattern plays, leaves sight; when both do not fit, the rest is scrolled to. Opened
+    // under a long grid, they are brought up at least far enough that their top shows.
     let box!: HTMLDivElement
     onMount(() => {
         const list = box.closest('.ctl')
-        if (!list || box.getBoundingClientRect().top < list.getBoundingClientRect().bottom - 140) return
-        box.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+        const strip = box.closest('.st')
+        if (!list || !strip) return
+        const area = list.getBoundingClientRect()
+        const panel = box.getBoundingClientRect()
+        const whole = panel.bottom + 14 - area.bottom
+        const room = strip.getBoundingClientRect().top - area.top - 10
+        const by = Math.max(Math.min(whole, room), panel.top + 160 - area.bottom)
+        if (by > 0) list.scrollBy({ top: by, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
     })
 
     return (
@@ -254,56 +262,58 @@ export function SoundPanel(props: { id: string; block: PatternBlock; only?: stri
                         </div>
                     )}
                 </For>
-            </div>
-            <div class="sp-f">
-                <span>Faint knobs are not in the code yet. Press one and its line is added.</span>
-                <Show when={!props.only && !isDrums(props.block) && !isLaid(props.block)}>
-                    <button
-                        class="btn"
-                        classList={{ on: naming() }}
-                        aria-expanded={naming()}
-                        title="Keeps this sound, with every knob as it stands, to use in any song"
-                        onClick={() => {
-                            setSaved(null)
-                            setNaming(!naming())
-                            queueMicrotask(() => nameBox?.select())
-                        }}
-                    >
-                        Save as preset
-                    </button>
-                </Show>
-                <button class="btn" classList={{ on: browsing() }} aria-expanded={browsing()} onClick={() => setBrowsing(!browsing())}>
-                    Browse all controls
-                </button>
-                <button class="btn" aria-label={`Close the sound controls of ${props.only ?? props.id}`} onClick={closeSoundControls}>
-                    Close
-                </button>
-            </div>
-            <Show when={!DEMO && !props.only && !isDrums(props.block) && !isLaid(props.block)}>
-                <div class="sp-m" data-testid={`midi-${props.id}`}>
-                    <span class="cap">Played by</span>
-                    <select
-                        class="sd-s"
-                        aria-label={`What plays ${props.id}`}
-                        disabled={stale()}
-                        value={out() === null ? HERE : (out()!.output ?? FIRST)}
-                        onFocus={look}
-                        onPointerDown={look}
-                        onChange={(event) => setMidiOut(props.id, event.currentTarget.value === HERE ? 'off' : event.currentTarget.value === FIRST ? null : event.currentTarget.value)}
-                    >
-                        <option value={HERE}>Weft Loom</option>
-                        <option value={FIRST}>MIDI, the first output there is</option>
-                        <For each={named()}>{(name) => <option value={name}>MIDI, {outputLabel(name)}</option>}</For>
-                    </select>
-                    <Show when={out()}>
-                        <span class="cap">Channel</span>
-                        <select class="sd-s sp-c" aria-label={`MIDI channel of ${props.id}`} disabled={stale()} value={String(out()!.channel)} onChange={(event) => setMidiChannel(props.id, Number(event.currentTarget.value))}>
-                            <For each={Array.from({ length: 16 }, (_, at) => at + 1)}>{(channel) => <option value={String(channel)}>{channel}</option>}</For>
-                        </select>
-                        <span class="sp-mn">Its notes go out over MIDI, to a synth or another program, and the app is silent for it.</span>
+                <div class="sp-a">
+                    <Show when={!DEMO && !props.only && !isDrums(props.block) && !isLaid(props.block)}>
+                        <div class="sp-m" data-testid={`midi-${props.id}`}>
+                            <span class="cap">Played by</span>
+                            <select
+                                class="sd-s"
+                                aria-label={`What plays ${props.id}`}
+                                disabled={stale()}
+                                value={out() === null ? HERE : (out()!.output ?? FIRST)}
+                                onFocus={look}
+                                onPointerDown={look}
+                                onChange={(event) => setMidiOut(props.id, event.currentTarget.value === HERE ? 'off' : event.currentTarget.value === FIRST ? null : event.currentTarget.value)}
+                            >
+                                <option value={HERE}>Weft Loom</option>
+                                <option value={FIRST}>MIDI, the first output there is</option>
+                                <For each={named()}>{(name) => <option value={name}>MIDI, {outputLabel(name)}</option>}</For>
+                            </select>
+                            <Show when={out()}>
+                                <span class="cap">Channel</span>
+                                <select class="sd-s sp-c" aria-label={`MIDI channel of ${props.id}`} disabled={stale()} value={String(out()!.channel)} onChange={(event) => setMidiChannel(props.id, Number(event.currentTarget.value))}>
+                                    <For each={Array.from({ length: 16 }, (_, at) => at + 1)}>{(channel) => <option value={String(channel)}>{channel}</option>}</For>
+                                </select>
+                                <span class="sp-mn">Its notes go out over MIDI, to a synth or another program, and the app is silent for it.</span>
+                            </Show>
+                        </div>
                     </Show>
+                    <p class="sp-h">Faint knobs are not in the code yet. Press one and its line is added.</p>
+                    <div class="sp-f">
+                        <Show when={!props.only && !isDrums(props.block) && !isLaid(props.block)}>
+                            <button
+                                class="btn"
+                                classList={{ on: naming() }}
+                                aria-expanded={naming()}
+                                title="Keeps this sound, with every knob as it stands, to use in any song"
+                                onClick={() => {
+                                    setSaved(null)
+                                    setNaming(!naming())
+                                    queueMicrotask(() => nameBox?.select())
+                                }}
+                            >
+                                Save as preset
+                            </button>
+                        </Show>
+                        <button class="btn" classList={{ on: browsing() }} aria-expanded={browsing()} onClick={() => setBrowsing(!browsing())}>
+                            Browse all controls
+                        </button>
+                        <button class="btn" aria-label={`Close the sound controls of ${props.only ?? props.id}`} onClick={closeSoundControls}>
+                            Close
+                        </button>
+                    </div>
                 </div>
-            </Show>
+            </div>
             <Show when={naming()}>
                 <form
                     class="sp-save"

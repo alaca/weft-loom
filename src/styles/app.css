@@ -127,7 +127,6 @@ kbd { font: 500 9.5px/1 var(--mono); font-stretch: 87%; color: var(--linen-2); b
 .st-h .fold { margin: 0 -6px 0 0; }
 .st-mini { display: flex; align-items: center; padding: 3px 4px; margin: -3px -4px; border-radius: 6px; }
 .st-mini:hover { background: var(--cloth-3); }
-.sp-w { scroll-margin-top: 52px; }
 /* What ends a strip's head stays at its top right. On a narrow window the rest of the head
    goes onto a second line under it, where it would otherwise run out of the strip. */
 .st-e { position: absolute; top: 12px; right: 14px; display: flex; align-items: center; gap: 11px; }
@@ -292,14 +291,16 @@ button.rn:hover { border-color: var(--linen-3); }
 .kn-x svg { width: 8px; height: 8px; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; fill: none; }
 .kn:hover .kn-x, .kn:focus-within .kn-x { display: grid; }
 
-.sp { margin: 0 16px 0 17px; padding-top: 13px; border-top: 1px solid var(--seam); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 22px; }
+.sp { margin: 0 16px 16px 17px; padding-top: 13px; border-top: 1px solid var(--seam); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 22px; }
 .sp h4 { font: 600 16px/1 var(--voice); margin-bottom: 12px; }
 .sp .cap { letter-spacing: 0.05em; font-size: 8.5px; white-space: nowrap; }
 .sp .kn .cap { white-space: normal; max-width: 50px; text-align: center; line-height: 1.3; }
 .sp .kn b { font-size: 10px; }
 .sp .kn-d { width: 44px; height: 44px; }
 .krow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 4px; }
-.sp-f { margin: 14px 16px 14px 17px; color: var(--linen-3); font-size: 11.5px; }
+/* What is done with the controls sits beside the last of them, where the row has room. */
+.sp-a { grid-column: span 3; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding-top: 2px; }
+.sp-h { color: var(--linen-3); font-size: 11.5px; line-height: 1.45; }
 .sp-px { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
 .sp-px .sd-s { flex: 1; min-width: 0; }
 
@@ -322,8 +323,7 @@ button.rn:hover { border-color: var(--linen-3); }
 .adsr { width: 100%; height: 44px; }
 .adsr polygon { fill: color-mix(in srgb, var(--h) 16%, transparent); }
 .adsr polyline { fill: none; stroke: var(--h); stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.sp-f { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-.sp-f > span { flex: 1; }
+.sp-f { display: flex; flex-wrap: wrap; gap: 8px; }
 .sp-save { display: flex; align-items: center; gap: 8px; margin: -4px 16px 14px 17px; max-width: 420px; }
 .sp-said { margin: -4px 16px 14px 17px; color: var(--linen-2); font-size: 11.5px; }
 .btn.on { background: var(--linen); border-color: var(--linen); color: var(--vat); }
@@ -688,6 +688,8 @@ svg.mini rect { fill: var(--h); }
     .st-b.two { grid-template-columns: minmax(0, 1fr); }
     .st-r { flex-wrap: wrap; }
     .sp { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }
+    .sp > div:nth-child(n + 5) { margin-top: 0; }
+    .sp-a { grid-column: auto; }
 }
 
 /* Where a sound that is being dragged can be let go. */
@@ -1029,7 +1031,7 @@ input.jm-code::placeholder { letter-spacing: 0; color: var(--linen-3); }
 .sd-s:disabled { color: var(--linen-3); }
 .sd-m { grid-column: 2 / -1; min-width: 0; font-weight: 500; font-size: 12.5px; color: var(--linen); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Whether a pattern is played by the app or sent out over MIDI, at the foot of its sound's controls. */
-.sp-m { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: -2px 16px 14px 17px; }
+.sp-m { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
 .sp-m .sd-s { height: 26px; font-size: 12px; max-width: 240px; }
 .sp-m .sp-c { width: 58px; }
 .sp-mn { flex-basis: 100%; color: var(--linen-3); font-size: 11.5px; }

@@ -1227,7 +1227,7 @@ const layoutNow = (): Layout => ({
     sounds: soundsOpen(),
     jams: jamsOpen(),
     mixer: mixerOpen(),
-    wave: waveShown(),
+    scope: waveShown(),
     song: songShown(),
     soundsWidth: soundsWidth(),
     codeWidth: codeWidth(),
@@ -1242,7 +1242,7 @@ function applyLayout(layout: Layout) {
         setJamsOpen(layout.jams)
         setMixerOpen(layout.mixer)
         setSoundsShare(layout.soundsShare)
-        setWaveShown(layout.wave)
+        setWaveShown(layout.scope)
         setSongShown(layout.song)
         setSoundsWidth(layout.soundsWidth)
         setCodeWidth(layout.codeWidth)

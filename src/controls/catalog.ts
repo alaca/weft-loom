@@ -1,4 +1,5 @@
 import { EFFECT_CALL, PLUGINS, pluginNamed } from '../plugins/list'
+import { panText, volumeText } from '../library/mix'
 import type { PatternBlock } from '../song/types'
 
 export type Group = 'source' | 'filter' | 'shape' | 'effects' | 'pattern'
@@ -28,9 +29,11 @@ export type ControlDef = {
     steady?: boolean
     // A knob of a plugin: offered with that plugin's sound, or with that effect on the pattern.
     plugin?: string
+    // How a value is said under the knob, when it is not as a number.
+    show?: (value: number) => string
 }
 
-type Extra = Partial<Pick<ControlDef, 'names' | 'scale' | 'unit' | 'only' | 'needs' | 'wrap' | 'call' | 'steady' | 'plugin'>>
+type Extra = Partial<Pick<ControlDef, 'names' | 'scale' | 'unit' | 'only' | 'needs' | 'wrap' | 'call' | 'steady' | 'plugin' | 'show'>>
 
 const control = (fn: string, label: string, group: Group, min: number, max: number, initial: number, describe: string, extra: Extra = {}): ControlDef => ({
     fn,
@@ -73,7 +76,7 @@ export const CONTROLS: ControlDef[] = [
     control('release', 'Release', 'shape', 0, 2, 0.2, 'How slowly a note fades out after it ends', { names: ['release', 'rel'], unit: 's' }),
     control('delay', 'Delay', 'effects', 0, 1, 0.25, 'How much of the sound is sent to the echo'),
     control('delayfeedback', 'Echo feedback', 'effects', 0, 0.9, 0.5, 'How long the echoes keep going', { names: ['delayfeedback', 'delayfb', 'dfb'] }),
-    control('pan', 'Pan', 'effects', 0, 1, 0.5, 'Left, right, or anywhere between'),
+    control('pan', 'Pan', 'effects', 0, 1, 0.5, 'Left, right, or anywhere between', { show: (value) => panText(value * 2 - 1) }),
     control('room', 'Room', 'effects', 0, 1, 0.3, 'How much reverb is added'),
     // The room is built again from nothing for every new size, and what rang in it is gone, so
     // a size that never stands still would be heard as a reverb that keeps breaking off.
@@ -89,8 +92,8 @@ export const CONTROLS: ControlDef[] = [
     // The sound engine turns a sound down or up by `gain` first of all, before its filter, its
     // crush and its distortion, so into an overdriven sound it changes the drive far more than
     // the loudness. How loud a pattern is, is therefore the level after all of that.
-    control('gain', 'Gain', 'source', 0, 1.5, 0.8, 'How hard the sound goes into its filter and effects'),
-    control('volume', 'Volume', 'effects', 0, 1.5, 1, 'How loud this pattern is, after its effects', { call: ['.mul(postgain(', '))'] }),
+    control('gain', 'Input', 'source', 0, 1.5, 0.8, 'How hard the sound goes into its filter and effects. How loud the pattern is, is its Volume'),
+    control('volume', 'Volume', 'effects', 0, 1.5, 1, 'How loud this pattern is, after its effects', { call: ['.mul(postgain(', '))'], show: volumeText }),
     control('duckdepth', 'Pump', 'effects', 0, 1, 0.8, 'How far the pumped patterns drop each time this sound hits', { needs: 'duckorbit' }),
     control('duckattack', 'Pump time', 'effects', 0.02, 0.6, 0.2, 'How long the pumped patterns take to come back up', { unit: 's', needs: 'duckorbit' }),
     control('swingBy', 'Swing', 'pattern', 0, 0.5, 0.2, 'Plays every second sixteenth late, so the pattern leans back', { wrap: ['', ', 8'] }),
