@@ -26,8 +26,8 @@ import { createStun } from './stun'
 //                    like stun:weftloom.dev:3478
 //   WEFT_TURN        who carries a call that cannot go directly, like turn:weftloom.dev:3479
 //   WEFT_TURN_SECRET the secret that carrier shares with the site, for the passes it hands out
-//   WEFT_REPORTS_TO  the address that is mailed when a song is reported; reports are kept
-//                    either way, and nobody is mailed unless this is set
+//   WEFT_REPORTS_TO  the address that is mailed when a song or a problem is reported; reports
+//                    are kept either way, and nobody is mailed unless this is set
 //
 // Without the last two the site sends no mail, and says so to whoever forgot a password.
 const env = process.env
@@ -116,6 +116,7 @@ async function start() {
                   ])
             : undefined,
         reported: send && reportsTo ? (report) => send(reportsTo, `A song on Weft Loom was reported: ${report.name}`, [`The song: ${origin}/songs/${report.id}`, '', 'What was said about it:', report.reason, '', 'It can be hidden or deleted by whoever published it, in the app under Your account.']) : undefined,
+        problem: send && reportsTo ? (problem) => send(reportsTo, `A problem with Weft Loom${problem.version ? ` ${problem.version}` : ''}`, [...problem.text.split('\n'), '', `Email: ${problem.email ?? 'none given'}`, `Version: ${problem.version || 'not said'}`, `System: ${problem.system || 'not said'}`, `What went wrong in the app: ${problem.errors || 'nothing noted'}`]) : undefined,
     })
     closing.push(site.close)
     console.log(`weft: site on 127.0.0.1:${site.port} as ${origin}, mail ${from ? 'on' : 'off'}`)

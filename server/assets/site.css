@@ -328,6 +328,11 @@ textarea.in { height: auto; padding: 10px 12px; line-height: 1.5; resize: vertic
 .rep u { color: var(--linen-2); text-decoration: underline; text-decoration-color: var(--linen-3); text-underline-offset: 3px; }
 .rep summary:hover u { color: var(--linen); }
 .rep form { display: grid; gap: 10px; margin: 12px 0 0 23px; }
+.prob { display: grid; gap: 16px; margin-top: 20px; }
+.prob label { display: grid; gap: 7px; }
+.prob dl { margin-top: 4px; }
+.prob dd { margin-top: 2px; color: var(--linen-2); font-size: 13px; overflow-wrap: anywhere; }
+.prob .btn { justify-self: start; }
 .rep .btn { justify-self: start; }
 
 .more { margin-top: 88px; }

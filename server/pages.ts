@@ -492,6 +492,36 @@ ${pasted(around, 'How Weft Loom works', DOCS_ABOUT)}`)
 
 // What the site and the app keep about a person, in plain words. It says what is so, and has to
 // be changed when what is kept changes.
+// How much a report of a problem may say.
+export const PROBLEM_LIMIT = 4000
+// What the app hands over when it opens the form: its version, the system it runs on, and the
+// last things that went wrong in it. They are shown, and sent only with the report.
+export type ProblemDetails = { version: string; system: string; errors: string }
+
+export function problemPage(around: Around, details: ProblemDetails): string {
+    const shown = (label: string, value: string) => (value ? html`<dt>${label}</dt><dd>${value}</dd>` : '')
+    const main = html`<main class="wrap page mid">
+    <div class="card note wide">
+        <h1>Report a problem</h1>
+        <p>Say what went wrong and what you were doing when it did. It goes to whoever makes Weft Loom.</p>
+        <form class="prob" method="post" action="/report">
+            <label><span class="cap">What happened</span><textarea class="in" name="text" rows="6" maxlength="${PROBLEM_LIMIT}" required></textarea></label>
+            <label><span class="cap">Your email, if you want an answer</span><input class="in" type="email" name="email" maxlength="254" autocomplete="email"></label>
+            ${details.version || details.system || details.errors ? html`<div>
+                <span class="cap">Sent with it</span>
+                <dl>${shown('Version', details.version)}${shown('System', details.system)}${shown('What went wrong in the app', details.errors)}</dl>
+            </div>` : ''}
+            <input type="hidden" name="version" value="${details.version}">
+            <input type="hidden" name="system" value="${details.system}">
+            <input type="hidden" name="errors" value="${details.errors}">
+            <button class="btn go" type="submit">Send the report</button>
+        </form>
+        ${around.source ? html`<p class="tail">You can also write it as an issue where the <a href="${around.source}/issues" rel="noopener">source code</a> is.</p>` : ''}
+    </div>
+</main>`
+    return layout(around, 'report', 'Report a problem, Weft Loom', main)
+}
+
 export function privacyPage(around: Around): string {
     const main = html`<main class="wrap page mid">
     <div class="card note wide">
@@ -509,6 +539,7 @@ export function privacyPage(around: Around): string {
         <p>What two people do in a jam, the song, the chat and the sounds, passes through the relay to the other person and is not kept. Only the last changes to the song are held in its memory while the jam lasts, so that someone whose line drops can catch up; they are gone when the jam is over. If you switch Open to jam on, the name you typed, the tempo of your song and its number of patterns are shown to anyone until you switch it off or the jam begins. Voice and picture go straight from one machine to the other wherever the two networks let them. Where they do not, the server passes them on between the two, scrambled so that it cannot hear or see them, and keeps nothing. To find each other, each machine asks the server for the address it is reached at from outside; nothing of that is kept.</p>
         <h2>Reports</h2>
         <p>A report of a song is kept with the song and the time, and is mailed to whoever runs the site, through the same mail service. It carries no name.</p>
+        <p>A problem reported from the app's Help menu is kept and mailed the same way: what you wrote, your email if you gave one, and the version of the app, the system it runs on and the last things that went wrong in it, which the form shows before it is sent.</p>
         ${around.demo ? html`<h2>The demo</h2>
         <p>The <a href="/demo">demo</a> is the app in your browser. It keeps nothing there: what you change lives in the page and is gone when you close it. Its sounds are fetched as the app fetches them, from GitHub, where Strudel's sounds are kept. GitHub sees the address that asks for them, as every web server does.</p>` : ''}
         <h2>What the server notes</h2>

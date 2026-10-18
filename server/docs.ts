@@ -253,6 +253,7 @@ export const DOCS: DocSection[] = [
 <div><dt><kbd>Option</kbd> <kbd>Shift</kbd> <kbd>F</kbd></dt><dd>Format the code; Alt instead of Option on Windows and Linux</dd></div>
 </dl>
 <p>The arrow beside <b>Update</b> also has <b>Format the code</b>: each call of a pattern on a line of its own, the parts of a stack one to a line, and a blank line between patterns. Only spaces and line breaks move, so the song stays the same, and <kbd>Cmd</kbd> <kbd>Z</kbd> takes it back. <b>Format on every update</b> does it each time the code is updated.</p>
+<p>If something goes wrong, <b>Report a Problem</b> in the Help menu opens a short form on this site. Say what happened; the version of the app and the system it runs on go with it, and the form shows them before you send it.</p>
 <p>Weft Loom looks for a newer version of itself when it starts, and again every few hours while it stays open and nothing plays, and offers it in a card at the bottom right. Later puts it off until the next start. Update and restart puts it in.</p>`,
     },
 ]

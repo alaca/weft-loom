@@ -518,6 +518,29 @@ describe('a folder of packs', () => {
     })
 })
 
+describe('a problem reported from the app', () => {
+    it('shows what the app sends with it, keeps what is written and hands it on', async () => {
+        await site.close()
+        const told: unknown[] = []
+        await start({ problem: (problem) => void told.push(problem) })
+        const html = await page('/report?version=0.1.14&system=macOS%20(Macintosh)&errors=%3Cb%3Eoops%3C%2Fb%3E')
+        expect(html).toContain('<dt>Version</dt><dd>0.1.14</dd>')
+        expect(html).toContain('<dd>&#60;b&#62;oops&#60;/b&#62;</dd>')
+        expect(html).not.toContain('<b>oops</b>')
+        expect(html).toContain('<input type="hidden" name="version" value="0.1.14">')
+
+        expect((await send('/report', { text: '   ' })).status).toBe(400)
+        const answer = await send('/report', { text: 'The sound stops\nafter a minute', email: 'Someone@Example.com', version: '0.1.14', system: 'macOS', errors: 'oops' })
+        expect(answer.status).toBe(200)
+        expect(await answer.text()).toContain('who can write back to you')
+        const kept = JSON.parse(readFileSync(join(dataDir, 'site.json'), 'utf8')).problems
+        expect(kept).toEqual([{ text: 'The sound stops\nafter a minute', email: 'someone@example.com', version: '0.1.14', system: 'macOS', errors: 'oops', at: expect.any(Number) }])
+        expect(told).toEqual(kept)
+        await send('/report', { text: 'No email', email: 'not an address' })
+        expect(JSON.parse(readFileSync(join(dataDir, 'site.json'), 'utf8')).problems[1].email).toBeNull()
+    })
+})
+
 describe('crawlers', () => {
     it('asks the crawlers of AI models to stay away and turns them away when they come, and lets search engines in', async () => {
         const robots = await fetch(`${site.origin}/robots.txt`, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; GPTBot/1.2; +https://openai.com/gptbot)' } })

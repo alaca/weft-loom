@@ -9,7 +9,7 @@ import { analyze } from '../src/song/analyze'
 import { readMeter } from '../src/song/meter'
 import { readTempoLane, secondsOf as barsLast } from '../src/song/tempo'
 import { DEFAULT_SONG, songLength } from '../src/song/arrange'
-import { docsPage, downloadPage, homePage, licencePage, makerPage, notePage, packsPage, privacyPage, REASON_LIMIT, songPage, songsPage, type Around, type Build, type Found, type Listed, type Maker, type Named, type OwnSound, type Pack, type Part, type Platform, type Search, type Shown } from './pages'
+import { docsPage, downloadPage, homePage, licencePage, makerPage, notePage, packsPage, privacyPage, PROBLEM_LIMIT, problemPage, REASON_LIMIT, songPage, songsPage, type Around, type Build, type Found, type Listed, type Maker, type Named, type OwnSound, type Pack, type Part, type Platform, type Search, type Shown } from './pages'
 import { songPicture } from './picture'
 import { isAiCrawler, ROBOTS } from './crawlers'
 import { senderOf } from './sender'
@@ -41,6 +41,8 @@ export type SiteOptions = {
     ice?: { stun?: string[]; turn?: { urls: string[]; secret: string; hours?: number } }
     // Told of every report of a song as it is kept, so that somebody reads it.
     reported?: (report: { id: string; name: string; reason: string }) => void | Promise<void>
+    // Told of every problem reported from the app, as it is kept.
+    problem?: (problem: Problem) => void | Promise<void>
     allow?: string[]
     now?: () => number
     // Where the app's source code can be read. The pages leave that link out until there is
@@ -163,7 +165,8 @@ type Song = {
     from?: string
 }
 type Report = { song: string; reason: string; at: number }
-type Kept = { people: Person[]; sessions: Session[]; songs: Song[]; reports: Report[] }
+export type Problem = { text: string; email: string | null; version: string; system: string; errors: string; at: number }
+type Kept = { people: Person[]; sessions: Session[]; songs: Song[]; reports: Report[]; problems: Problem[] }
 type Code = { hash: string; until: number; wrong: number }
 type Kind = { bytes: Buffer; type: string; kept: string; rules?: string }
 type Answer = { status: number; body?: unknown; html?: string; file?: { bytes?: Buffer; type: string; name?: string; head?: Record<string, string> }; fixed?: Kind; build?: { file: string; bytes: number; name?: string } }
@@ -338,7 +341,7 @@ export function createSite(options: SiteOptions): Promise<Site> {
     const songsDir = join(options.dataDir, 'songs')
     const keptFile = join(options.dataDir, 'site.json')
     mkdirSync(songsDir, { recursive: true })
-    let kept: Kept = { people: [], sessions: [], songs: [], reports: [] }
+    let kept: Kept = { people: [], sessions: [], songs: [], reports: [], problems: [] }
     if (existsSync(keptFile)) {
         try {
             kept = { ...kept, ...(JSON.parse(readFileSync(keptFile, 'utf8')) as Partial<Kept>) }
@@ -855,8 +858,29 @@ export function createSite(options: SiteOptions): Promise<Site> {
         return note(200, 'The report is kept', ['It is kept with the song and the time it was sent.'], back)
     }
 
-    // The pages, which are for everyone and know nobody. One form changes something, the
-    // report of a song.
+    // What the app hands over with a problem, as it may be written in an address or a form.
+    const detailsOf = (given: { get: (name: string) => unknown }) => ({ version: clean(given.get('version'), 40), system: clean(given.get('system'), 160), errors: clean(given.get('errors'), 1200) })
+
+    // A problem with the app, said by whoever had it. It is kept and handed on as a report is.
+    function problemReported(body: any, from: string): Answer {
+        const back = { href: '/', label: 'Go to the first page' }
+        const text = String(body?.text ?? '').trim().slice(0, PROBLEM_LIMIT)
+        if (!text) return note(400, 'The report says nothing', ['Say what went wrong, then send it again.'], { href: '/report', label: 'Write it again' })
+        if (tooMany(`problem from ${from}`)) return note(429, 'Too many reports', ['Too many reports came from here. Wait a quarter of an hour and send it again.'], back)
+        if (kept.problems.length >= MOST_REPORTS) return note(503, 'The report was not kept', ['The site cannot take more reports just now.'], back)
+        const problem: Problem = { text, email: emailOf(body?.email), ...detailsOf({ get: (name) => body?.[name] }), at: now() }
+        kept.problems.push(problem)
+        keep()
+        try {
+            void Promise.resolve(options.problem?.(problem)).catch(() => undefined)
+        } catch {
+            // A report is kept whether or not anyone could be told of it.
+        }
+        return note(200, 'Thank you, it is sent', [problem.email ? 'It reached whoever makes Weft Loom, who can write back to you.' : 'It reached whoever makes Weft Loom.'], back)
+    }
+
+    // The pages, which are for everyone and know nobody. Two forms change something: the report
+    // of a song, and the report of a problem.
     function pageAnswer(request: IncomingMessage, url: URL, body: any, from: string): Answer {
         const path = url.pathname
         const get = request.method === 'GET'
@@ -873,6 +897,8 @@ export function createSite(options: SiteOptions): Promise<Site> {
         if (get && path === '/docs') return { status: 200, html: docsPage(around) }
         if (get && path === '/download') return { status: 200, html: downloadPage(around, built()) }
         if (get && path === '/packs') return { status: 200, html: packsPage(around, packsNow()) }
+        if (get && path === '/report') return { status: 200, html: problemPage(around, detailsOf(url.searchParams)) }
+        if (post && path === '/report') return problemReported(body, from)
         const packed = /^\/packs\/([a-z0-9]+)\.(weftpack|mp3)$/.exec(path)
         if (packed && get) {
             const pack = packsNow().find((one) => one.id === packed[1])

@@ -117,6 +117,7 @@ import { attachJam, leaveJam, tellJam } from './jam'
 import { openAccount } from './account'
 import { attachPublish, openPublish } from './publish'
 import { attachUpdate, lookForNewVersion, lookNowAndThen, lookWith } from './update'
+import { noteWhatGoesWrong, reportProblem } from './problem'
 import { SITE } from '../site/api'
 import { formatCode } from '../song/format'
 import { EFFECT_CALL, pluginNamed } from '../plugins/list'
@@ -585,6 +586,7 @@ export async function mount(root: HTMLElement): Promise<void> {
             { id: 'weft-help-docs', text: 'Weft Loom Docs', action: () => void openInBrowser(`${SITE}/docs`) },
             { id: 'weft-help-guide', text: 'Make a First Beat', action: () => void import('./guide').then((guide) => guide.startGuide()) },
             { id: 'weft-help-update', text: 'Check for Updates…', action: () => void lookForNewVersion(true) },
+            { id: 'weft-help-report', text: 'Report a Problem…', action: () => void reportProblem() },
             'line',
             { id: 'weft-help-coffee', text: 'Buy Me a Coffee', action: () => void openInBrowser(`${SITE}/coffee`) },
         ],
