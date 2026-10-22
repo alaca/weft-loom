@@ -8,6 +8,8 @@ export type Refusal = { why: string; what: string; line?: number }
 export type Published = { id: string; name: string; description: string; style: string; licence: string; hidden: boolean; published: number; plays: number; downloads: number; bytes: number; url: string }
 // A song as the site's public list gives it.
 export type SiteSong = Published & { by: string; tempo: number | null; patterns: string[]; preview: string; seconds?: number }
+// A free pack as the site lists it. Its file and the half minute to hear are at addresses of their own.
+export type SitePack = { id: string; name: string; about: string; tempo: number | null; sounds: number; presets: number; snippets: number; bytes: number; seconds: number | null }
 export type Signed = { token: string; name: string; email: string }
 export type SongWords = { description: string; style: string; licence: string }
 export type ToPublish = SongWords & { file: string; preview: string; peaks: number[]; seconds: number; previewFrom: number; from?: string }
@@ -78,4 +80,17 @@ export const site = {
     edit: (token: string, id: string, words: SongWords) => call<Published>(`/api/songs/${id}`, { token, json: words }),
     hide: (token: string, id: string, hidden: boolean) => call<object>(`/api/songs/${id}/${hidden ? 'hide' : 'show'}`, { token, method: 'POST' }),
     remove: (token: string, id: string) => call<{ used: number; most: number }>(`/api/songs/${id}`, { token, method: 'DELETE' }),
+    packs: () => call<{ packs: SitePack[] }>('/api/packs'),
+    packPreview: (id: string): string => `${SITE}/packs/${id}.mp3`,
+    // The file of a free pack, as text, the way a pack chosen from a folder is read.
+    packFile: async (id: string): Promise<string> => {
+        let answer: Response
+        try {
+            answer = await fetch(`${SITE}/packs/${id}.weftpack`)
+        } catch {
+            throw new SiteRefused(0, { why: 'unreachable', what: 'The site could not be reached. Check that you are online, then try again.' })
+        }
+        if (!answer.ok) throw new SiteRefused(answer.status, { why: 'missing', what: 'The site does not have that pack any more.' })
+        return answer.text()
+    },
 }

@@ -1,12 +1,13 @@
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show } from 'solid-js'
 import { Fold, isFolded } from './Fold'
-import { addAudio, addOwnSounds, addPack, addSlices, closeSounds, colorAt, findPacks, hearSound, keepTake, openTrim, presetOf, recordTake, removeOwnSound, removePack, removePreset, soundCatalogue, useSound } from '../app/controller'
+import { addAudio, addOwnSounds, addPack, addSitePack, addSlices, closeSounds, colorAt, hearSound, keepTake, openTrim, presetOf, recordTake, removeOwnSound, removePack, removePreset, soundCatalogue, useSound } from '../app/controller'
 import { DEMO } from '../demo/demo'
 import { lengthText } from '../library/sounds'
 import { fits, inUse, isLaid, isOwn, isPreset, isSliced, takesKit } from '../sounds/apply'
 import { KIND_LABELS } from '../sounds/presets'
 import { countSounds, findSounds, SOUND_DRAG, SOUND_GROUPS, type SoundGroup, type SoundItem } from '../sounds/catalog'
 import { engineState, ownPresets, ownSoundNote, ownSounds, packNote, packs, selected, setDraggedSound, song, soundsOpen, stale, takeOpening, takeSince } from '../stores/song'
+import { site, type SitePack } from '../site/api'
 import { PackDialog } from './PackDialog'
 
 // The demo has no sounds of your own, and takes no packs.
@@ -25,6 +26,55 @@ export function SoundBrowser() {
     const [making, setMaking] = createSignal(false)
     let packFile: HTMLInputElement | undefined
     const packName = (id: string | undefined) => packs().find((pack) => pack.id === id)?.name ?? ''
+
+    // The free packs of the site, asked for the first time they are looked at, each to hear for
+    // half a minute and to add with one press.
+    const [packView, setPackView] = createSignal<'mine' | 'free'>('mine')
+    const [freePacks, setFreePacks] = createSignal<SitePack[] | null>(null)
+    const [reached, setReached] = createSignal<'asking' | 'yes' | 'no'>('asking')
+    const [adding, setAdding] = createSignal<string | null>(null)
+    const [hearing, setHearing] = createSignal<string | null>(null)
+    const player = new Audio()
+    player.addEventListener('ended', () => setHearing(null))
+    const quiet = () => {
+        player.pause()
+        setHearing(null)
+    }
+    const askPacks = async () => {
+        setReached('asking')
+        try {
+            setFreePacks((await site.packs()).packs)
+            setReached('yes')
+        } catch {
+            setReached('no')
+        }
+    }
+    const hearPack = (pack: SitePack) => {
+        if (hearing() === pack.id) return quiet()
+        player.src = site.packPreview(pack.id)
+        setHearing(pack.id)
+        player.play().catch(() => setHearing(null))
+    }
+    const addFree = async (pack: SitePack) => {
+        setAdding(pack.id)
+        await addSitePack(pack)
+        setAdding(null)
+    }
+    const added = (id: string) => packs().some((pack) => pack.id === id)
+    const holds = (pack: SitePack) => [pack.tempo ? `${pack.tempo} bpm` : '', `${pack.sounds} ${pack.sounds === 1 ? 'sound' : 'sounds'}`].filter(Boolean).join(', ')
+    const freeShown = () => group() === 'packs' && packView() === 'free'
+    createEffect(
+        on(group, (now) => {
+            if (now === 'packs') setPackView(packs().length ? 'mine' : 'free')
+        }),
+    )
+    createEffect(() => {
+        if (freeShown() && freePacks() === null && reached() === 'asking') void askPacks()
+    })
+    createEffect(() => {
+        if (!freeShown() || !soundsOpen()) quiet()
+    })
+    onCleanup(quiet)
     // What stands beside a preset's name: Yours for one you saved, else what kind of sound it is.
     const kindOf = (item: SoundItem) => {
         const preset = presetOf(item.name)
@@ -200,35 +250,48 @@ export function SoundBrowser() {
                     </Show>
                 </Show>
                 <Show when={group() === 'packs'}>
-                    <div class="sb-own">
-                        {/* No kinds are named: a system that does not know what a .weftpack is would
-                            grey every pack out. What is chosen is read and refused if it is none. */}
-                        <input
-                            ref={packFile}
-                            type="file"
-                            hidden
-                            data-testid="pack-file"
-                            onChange={(event) => {
-                                const picked = event.currentTarget.files?.[0]
-                                event.currentTarget.value = ''
-                                if (picked) void addPack(picked)
-                            }}
-                        />
-                        <button class="btn" disabled={loaded() === 'loading'} onClick={() => packFile?.click()}>
-                            + Add a pack
+                    {/* No kinds are named: a system that does not know what a .weftpack is would
+                        grey every pack out. What is chosen is read and refused if it is none. */}
+                    <input
+                        ref={packFile}
+                        type="file"
+                        hidden
+                        data-testid="pack-file"
+                        onChange={(event) => {
+                            const picked = event.currentTarget.files?.[0]
+                            event.currentTarget.value = ''
+                            if (!picked) return
+                            setPackView('mine')
+                            void addPack(picked)
+                        }}
+                    />
+                    <div class="seg s pk-v" role="group" aria-label="Packs">
+                        <button classList={{ on: packView() === 'mine' }} aria-pressed={packView() === 'mine'} onClick={() => setPackView('mine')}>
+                            Added
+                            <span class="sb-c">{packs().length}</span>
                         </button>
-                        <span>
-                            A pack is a file of sounds, presets and snippets made for Weft Loom.{' '}
-                            <button class="sb-lk" onClick={findPacks}>
-                                Free packs on weftloom.dev
-                            </button>
-                        </span>
+                        <button classList={{ on: packView() === 'free' }} aria-pressed={packView() === 'free'} onClick={() => setPackView('free')}>
+                            Free packs
+                        </button>
                     </div>
                     <Show when={packNote()}>
                         <p class="sb-n" role="status" data-testid="pack-note">
                             {packNote()}
                         </p>
                     </Show>
+                </Show>
+                <Show when={group() === 'packs' && packView() === 'mine'}>
+                    <div class="sb-own">
+                        <button class="btn" disabled={loaded() === 'loading'} onClick={() => packFile?.click()}>
+                            + Add a pack
+                        </button>
+                        <span>
+                            A pack is a file of sounds, presets and snippets made for Weft Loom.{' '}
+                            <button class="sb-lk" onClick={() => setPackView('free')}>
+                                See the free packs
+                            </button>
+                        </span>
+                    </div>
                     <ul class="pk-l" aria-label="Packs on this machine">
                         <For each={packs()}>
                             {(pack) => (
@@ -250,7 +313,45 @@ export function SoundBrowser() {
                         </For>
                     </ul>
                 </Show>
-                <div class="sb-l" ref={list}>
+                <Show when={freeShown()}>
+                    <div class="pk-f" data-testid="free-packs">
+                        <Show
+                            when={reached() === 'yes'}
+                            fallback={
+                                <p class="sb-n" role="status">
+                                    <Show when={reached() === 'no'} fallback="Asking weftloom.dev for its packs.">
+                                        The packs on weftloom.dev could not be reached. Check that you are online. <button onClick={() => void askPacks()}>Try again</button>
+                                    </Show>
+                                </p>
+                            }
+                        >
+                            <ul class="pk-l" aria-label="Free packs on weftloom.dev">
+                                <For each={freePacks()}>
+                                    {(pack) => (
+                                        <li class="pk-i pk-fi" classList={{ now: hearing() === pack.id }} title={pack.about} data-testid={`free-${pack.id}`}>
+                                            <button class="pk-hear" aria-label={hearing() === pack.id ? `Stop ${pack.name}` : `Hear ${pack.name}`} aria-pressed={hearing() === pack.id} onClick={() => hearPack(pack)}>
+                                                <svg viewBox="0 0 16 16">
+                                                    <path d={hearing() === pack.id ? 'M4 2.8h3v10.4H4zM9 2.8h3v10.4H9z' : 'M4.8 2.6v10.8L13.4 8z'} />
+                                                </svg>
+                                            </button>
+                                            <span class="pk-t">
+                                                <b>{pack.name}</b>
+                                                <span class="sb-c">{holds(pack)}</span>
+                                            </span>
+                                            <Show when={!added(pack.id)} fallback={<span class="pk-ok">Added</span>}>
+                                                <button class="btn pk-add" aria-label={`Add ${pack.name}`} disabled={adding() !== null || loaded() === 'loading'} onClick={() => void addFree(pack)}>
+                                                    {adding() === pack.id ? 'Adding' : 'Add'}
+                                                </button>
+                                            </Show>
+                                        </li>
+                                    )}
+                                </For>
+                            </ul>
+                            <p class="pk-x">Free to use in anything you make, and to share. Every sound in them is made from sums, not taken from a recording.</p>
+                        </Show>
+                    </div>
+                </Show>
+                <div class="sb-l" ref={list} hidden={freeShown()}>
                     <For each={shown()}>
                         {(item) => (
                             <div

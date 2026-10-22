@@ -967,6 +967,8 @@ export function createSite(options: SiteOptions): Promise<Site> {
         if (!path.startsWith('/api/')) return pageAnswer(request, url, body, from)
 
         if (method === 'GET' && path === '/api/ice') return iceFor(from)
+        // The free packs, for the app to list and add without a trip to the page.
+        if (method === 'GET' && path === '/api/packs') return { status: 200, body: { packs: packsNow().map(({ id, name, about, tempo, sounds, presets, snippets, bytes, preview }) => ({ id, name, about, tempo, sounds, presets, snippets, bytes, seconds: preview.seconds })) } }
         if (method === 'POST' && path === '/api/register') return registered(body, from)
         if (method === 'POST' && path === '/api/sign-in') return signedIn(body, from)
         if (method === 'POST' && path === '/api/password/forgot') return forgotten(body, from)

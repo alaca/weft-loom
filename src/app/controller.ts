@@ -112,7 +112,7 @@ import {
 } from '../song/patterns'
 import type { PatternBlock, PatternEvent, TextEdit } from '../song/types'
 import { fits, isLaid, isOwn, isPreset, isRow, soundEdit, soundTextAt } from '../sounds/apply'
-import { catalogue, type SoundItem, soundLabel } from '../sounds/catalog'
+import { catalogue, nameAsWords, type SoundItem } from '../sounds/catalog'
 import type { Bars } from '../jam/protocol'
 import { jamsOpen, jamStage, setJamsOpen, setJamUnread, setSoundsShare, soundsShare } from '../stores/jam'
 import { attachJam, leaveJam, tellJam } from './jam'
@@ -120,7 +120,7 @@ import { openAccount } from './account'
 import { attachPublish, openPublish } from './publish'
 import { attachUpdate, lookForNewVersion, lookNowAndThen, lookWith } from './update'
 import { noteWhatGoesWrong, reportProblem } from './problem'
-import { SITE } from '../site/api'
+import { site, SITE, type SitePack } from '../site/api'
 import { formatCode } from '../song/format'
 import { EFFECT_CALL, pluginNamed } from '../plugins/list'
 import { warmPlugins } from '../engine/faust'
@@ -2276,7 +2276,7 @@ export const soundCatalogue = (): SoundItem[] => {
             if (!kept.has(item.name)) return []
             // A sound of a pack is listed with its pack, under its own name without the pack's.
             const pack = kept.get(item.name)
-            return [pack ? { ...item, group: 'packs', pack, label: soundLabel(item.name.slice(pack.length + 1)) } : item]
+            return [pack ? { ...item, group: 'packs', pack, label: nameAsWords(item.name.slice(pack.length + 1)) } : item]
         }),
         ...allPresets().map(presetItem),
     ]
@@ -2804,19 +2804,21 @@ createRoot(() =>
     }),
 )
 
-// The page of the site where packs are handed out.
-export const findPacks = () => void openInBrowser(`${SITE}/packs`)
-
 // A pack file added. A pack that is here already is taken to be a newer one of itself: what
 // it no longer holds goes, and the rest is replaced. A sound of the pack that came here before
 // it, in a song that used it, is among yours under the same name, and is the pack's from now
 // on. A sound whose name another pack or the app itself has is left out, and so is one that
 // is no sound.
-export async function addPack(file: File): Promise<boolean> {
+export const addPack = (file: File): Promise<boolean> => addPackFrom(() => file.text(), file.name)
+
+// A free pack from the site, added the way a file of one is.
+export const addSitePack = (pack: SitePack): Promise<boolean> => addPackFrom(() => site.packFile(pack.id), pack.name)
+
+async function addPackFrom(text: () => Promise<string>, label: string): Promise<boolean> {
     setPackNote(null)
     try {
-        const read = readPackFile(await file.text())
-        if ('why' in read) return setPackNote(`${file.name} was not added. ${read.why}`), false
+        const read = readPackFile(await text())
+        if ('why' in read) return setPackNote(`${label} was not added. ${read.why}`), false
         const { pack } = read
         let left = read.left
         const before = packs().find((mine) => mine.id === pack.id)
@@ -2840,7 +2842,7 @@ export async function addPack(file: File): Promise<boolean> {
             names.push(sound.name)
         }
         for (const gone of before?.sounds.filter((name) => !names.includes(name)) ?? []) await forget(gone)
-        if (!names.length && !pack.presets.length && !pack.snippets.length) return setPackNote(`${file.name} was not added. There is nothing in it that the app can use.`), false
+        if (!names.length && !pack.presets.length && !pack.snippets.length) return setPackNote(`${label} was not added. There is nothing in it that the app can use.`), false
         const info: PackInfo = { id: pack.id, name: pack.name, by: pack.by, about: pack.about, sounds: names.sort(), presets: pack.presets, snippets: pack.snippets, addedAt: Date.now() }
         if (!keepPacks([...packs().filter((mine) => mine.id !== pack.id), info].sort(byName))) return setPackNote(`${pack.name} could not be kept: there is no room left. ${MAKE_ROOM}`), false
         const kept = await ownSoundStore.all()
@@ -2854,7 +2856,7 @@ export async function addPack(file: File): Promise<boolean> {
         setPackNote(`${before ? 'Renewed' : 'Added'} ${pack.name}: ${holds}.${left ? ` ${left} ${left === 1 ? 'thing in it was' : 'things in it were'} left out, as nothing the app can use, or under a name that is taken.` : ''}`)
         return true
     } catch (err) {
-        setPackNote(`${file.name} could not be added: ${String((err as Error)?.message ?? err)}`)
+        setPackNote(`${label} could not be added: ${String((err as Error)?.message ?? err)}`)
         return false
     }
 }

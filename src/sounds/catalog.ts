@@ -51,18 +51,19 @@ export const kitLabel = (name: string): string =>
         .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
         .replace(/([a-z])(\d)/g, '$1 $2')
 
+// A sound's name as words, the way a sound of a pack or of your own is labelled.
+export const nameAsWords = (name: string): string =>
+    sentence(
+        name
+            .replace(/^gm_/, '')
+            .replace(/_/g, ' ')
+            .replace(/([a-z])(\d)/g, '$1 $2')
+            .replace(/^epiano/, 'electric piano')
+            .replace(/^fx /, 'effect '),
+    )
+
 // The recorded grand piano is told apart from the General MIDI one, which is called Piano too.
-export const soundLabel = (name: string): string =>
-    name === 'piano'
-        ? 'Grand piano'
-        : sentence(
-              name
-                  .replace(/^gm_/, '')
-                  .replace(/_/g, ' ')
-                  .replace(/([a-z])(\d)/g, '$1 $2')
-                  .replace(/^epiano/, 'electric piano')
-                  .replace(/^fx /, 'effect '),
-          )
+export const soundLabel = (name: string): string => (name === 'piano' ? 'Grand piano' : nameAsWords(name))
 
 export function catalogue(raw: RawSound[], kitNames: string[]): SoundItem[] {
     const cased = new Map(kitNames.map((name) => [name.toLowerCase(), name]))
@@ -82,7 +83,7 @@ export function catalogue(raw: RawSound[], kitNames: string[]): SoundItem[] {
         } else if (sound.type === 'soundfont') {
             instruments.push({ group: 'instruments', name: sound.name, label: soundLabel(sound.name), parts: [] })
         } else if (sound.type === 'sample' && sound.tag === YOURS_TAG) {
-            yours.push({ group: 'yours', name: sound.name, label: soundLabel(sound.name), parts: [] })
+            yours.push({ group: 'yours', name: sound.name, label: nameAsWords(sound.name), parts: [] })
         } else if (sound.type === 'sample' && sound.tag === INSTRUMENT_TAG) {
             instruments.unshift({ group: 'instruments', name: sound.name, label: soundLabel(sound.name), parts: [] })
         } else if (sound.type === 'sample') {

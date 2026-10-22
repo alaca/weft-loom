@@ -14,6 +14,8 @@ const RELAY_PORT = 5190
 // project that is not part of it. No mail is sent from here: a sign-in link is handed back.
 const SITE_PORT = 5191
 const SITE_DATA = new URL('./server/.data', import.meta.url).pathname
+// The free packs it hands out, when a folder of them is put there.
+const SITE_PACKS = new URL('./server/.data/packs', import.meta.url).pathname
 const held = globalThis as { __weftRelay?: Promise<Relay | null>; __weftSite?: Promise<Site | null> }
 const devRelay = (): Plugin => ({
     name: 'weft-jam-relay',
@@ -29,7 +31,7 @@ const devRelay = (): Plugin => ({
             )
         held.__weftSite = (held.__weftSite ?? Promise.resolve(null))
             .then((before) => before?.close())
-            .then(() => createSite({ port: SITE_PORT, dataDir: process.env.WEFT_SITE_DATA ?? SITE_DATA, asks: 100000, codesShown: true }))
+            .then(() => createSite({ port: SITE_PORT, dataDir: process.env.WEFT_SITE_DATA ?? SITE_DATA, packs: process.env.WEFT_SITE_PACKS ?? SITE_PACKS, asks: 100000, codesShown: true }))
             .then(
                 (site) => (console.log(`  song site on ${site.origin}`), site),
                 (err) => (console.log(`  song site not started: ${err?.code ?? err}`), null),

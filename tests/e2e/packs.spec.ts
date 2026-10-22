@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
-import { readFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { join, resolve } from 'node:path'
 
 const SONG = 'setcpm(120/4)\n\ndrums: stack(\n  s("bd").struct("x ~ ~ ~   x ~ ~ ~   x ~ ~ ~   x ~ ~ ~"),\n)\n  .bank("RolandTR909")\n  .mask("<1!4>")\n'
 
@@ -64,6 +65,7 @@ test('a pack is made from sounds of your own, added to the app, used in a song, 
 
     // Added, the pack is listed with what it holds, and its sounds are beside your own.
     await browser(page).getByRole('radio', { name: /^Packs/ }).click()
+    await browser(page).getByRole('button', { name: /^Added/ }).click()
     await expect(browser(page)).toContainText('No packs yet')
     await page.getByTestId('pack-file').setInputFiles({ name: 'Dust loops.weftpack', mimeType: 'application/json', buffer: file })
     await expect(page.getByTestId('pack-note')).toHaveText('Added Dust loops: 2 sounds and 1 snippet.')
@@ -104,4 +106,42 @@ test('a pack is made from sounds of your own, added to the app, used in a song, 
     await expect(browser(page).locator('.sb-i')).toHaveCount(2)
     await browser(page).getByRole('radio', { name: /^Yours/ }).click()
     await expect(browser(page).locator('.sb-i')).toHaveCount(2)
+})
+
+test('a free pack of the site is added from inside the app', async ({ page }) => {
+    // The dev site hands out the packs it finds in its folder. One is put there for this test.
+    const folder = resolve('server/.data/packs')
+    const id = `free${Math.random().toString(36).slice(2, 8).replace(/[^a-z0-9]/g, 'x')}`
+    const name = `Test ${id}`
+    const list = join(folder, 'packs.json')
+    await mkdir(folder, { recursive: true })
+    const before = await readFile(list, 'utf8').then((text) => JSON.parse(text).packs as unknown[]).catch(() => [])
+    const sound = { name: `${id}_hit`, file: 'hit.wav', type: 'audio/wav', seconds: 0.4, data: tone(110, 0.4).toString('base64') }
+    await writeFile(join(folder, `${id}.weftpack`), JSON.stringify({ weftpack: 1, id, name, by: 'Weft Loom', about: 'One hit.', sounds: [sound], presets: [], snippets: [] }))
+    await writeFile(join(folder, `${id}.mp3`), tone(110, 0.4))
+    await writeFile(list, JSON.stringify({ packs: [...before, { id, name, about: 'One hit.', tempo: 120, sounds: 1, presets: 0, snippets: 0, seconds: 0.4, peaks: [1] }] }))
+    try {
+        await page.goto('/')
+        await page.waitForFunction(() => Boolean((window as any).__weft))
+        await expect(page.getByTestId('sounds')).toHaveText('Sounds ready', { timeout: 30000 })
+        await page.getByRole('button', { name: 'Sounds', exact: true }).click()
+
+        // With no packs added yet, the Packs tab opens on the free ones.
+        await browser(page).getByRole('radio', { name: /^Packs/ }).click()
+        const row = page.getByTestId(`free-${id}`)
+        await expect(row).toContainText(name)
+        await expect(row).toContainText('120 bpm, 1 sound')
+        await row.getByRole('button', { name: `Add ${name}`, exact: true }).click()
+        await expect(page.getByTestId('pack-note')).toHaveText(`Added ${name}: 1 sound.`)
+        await expect(row).toContainText('Added')
+
+        // It is on this machine now, with its sound beside the others.
+        await browser(page).getByRole('button', { name: /^Added/ }).click()
+        await expect(page.getByTestId(`pack-${id}`)).toContainText(name)
+        await expect(browser(page).locator('.sb-i', { hasText: 'Hit' })).toHaveCount(1)
+    } finally {
+        await writeFile(list, JSON.stringify({ packs: before }))
+        await rm(join(folder, `${id}.weftpack`), { force: true })
+        await rm(join(folder, `${id}.mp3`), { force: true })
+    }
 })
