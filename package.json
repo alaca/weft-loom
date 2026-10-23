@@ -9,6 +9,7 @@
         "dev": "vite",
         "build": "vite build",
         "build:server": "node scripts/build-server.mjs",
+        "postinstall": "node scripts/patch-strudel.mjs",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
         "test:e2e": "playwright test",

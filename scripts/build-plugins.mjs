@@ -3,7 +3,7 @@
 // part of Faust that plays them into public/plugins/faust.js. Run after a plugin is changed;
 // what it writes is kept with the code, so a build of the app needs no Faust.
 import { execFileSync } from 'node:child_process'
-import { readdirSync, rmSync } from 'node:fs'
+import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { build } from 'vite'
 
@@ -29,3 +29,10 @@ await build({
         rollupOptions: { external: ['fs', 'url', 'module', 'path', 'process'] },
     },
 })
+// Faust hands each audio clock the code of a plugin at an address it never takes back. The address
+// is only needed until the clock has read the code.
+const bundled = join(here, 'public/plugins/faust.js')
+const added = 'await context.audioWorklet.addModule(url);'
+const code = readFileSync(bundled, 'utf8')
+if (!code.includes(added)) throw new Error('Faust has changed: the address of a plugin\'s code could not be given back')
+writeFileSync(bundled, code.replaceAll(added, `${added} URL.revokeObjectURL(url);`))

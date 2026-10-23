@@ -40,6 +40,12 @@ export function SoundBrowser() {
         player.pause()
         setHearing(null)
     }
+    // A preview that was heard stays loaded in the player until it is emptied.
+    const letGo = () => {
+        quiet()
+        player.removeAttribute('src')
+        player.load()
+    }
     const askPacks = async () => {
         setReached('asking')
         try {
@@ -74,7 +80,7 @@ export function SoundBrowser() {
     createEffect(() => {
         if (!freeShown() || !soundsOpen()) quiet()
     })
-    onCleanup(quiet)
+    onCleanup(letGo)
     // What stands beside a preset's name: Yours for one you saved, else what kind of sound it is.
     const kindOf = (item: SoundItem) => {
         const preset = presetOf(item.name)

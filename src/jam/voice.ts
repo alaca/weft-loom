@@ -83,13 +83,15 @@ export function openVoice(host: boolean, on: VoiceEvents): Voice | null {
     // A window is only let to make sound, or to measure it, after a click or a key. The jam
     // starts when the other person joins, which is neither, so both are tried again at the next.
     let aloud: AudioNode | null = null
+    let aloudFrom: AudioNode | null = null
     const hear = () => {
         ear.muted = false
         void ear
             .play()
             .then(() => {
+                aloudFrom?.disconnect()
                 aloud?.disconnect()
-                aloud = null
+                aloud = aloudFrom = null
             })
             .catch(() => {
                 ear.muted = true
@@ -97,7 +99,8 @@ export function openVoice(host: boolean, on: VoiceEvents): Voice | null {
                 if (!ear.srcObject || aloud || !context) return
                 aloud = context.createGain()
                 aloud.connect(context.destination)
-                context.createMediaStreamSource(ear.srcObject as MediaStream).connect(aloud)
+                aloudFrom = context.createMediaStreamSource(ear.srcObject as MediaStream)
+                aloudFrom.connect(aloud)
             })
     }
     const wake = () => {
@@ -107,6 +110,14 @@ export function openVoice(host: boolean, on: VoiceEvents): Voice | null {
     const GESTURES = ['pointerdown', 'click', 'keydown'] as const
     for (const gesture of GESTURES) window.addEventListener(gesture, wake, true)
 
+    // What measures a voice is let go when another voice comes in its place, as it does each
+    // time the microphone is switched on.
+    const sources = new WeakMap<AnalyserNode, AudioNode>()
+    const unlisten = (meter: AnalyserNode | null) => {
+        if (!meter) return
+        sources.get(meter)?.disconnect()
+        meter.disconnect()
+    }
     const listen = (stream: MediaStream): AnalyserNode | null => {
         try {
             if (!context) {
@@ -117,7 +128,9 @@ export function openVoice(host: boolean, on: VoiceEvents): Voice | null {
             }
             const meter = context.createAnalyser()
             meter.fftSize = 512
-            context.createMediaStreamSource(stream).connect(meter)
+            const source = context.createMediaStreamSource(stream)
+            source.connect(meter)
+            sources.set(meter, source)
             if (context.state !== 'running') void context.resume().catch(() => undefined)
             return meter
         } catch {
@@ -142,6 +155,7 @@ export function openVoice(host: boolean, on: VoiceEvents): Voice | null {
         if (event.track.kind === 'video') return on.picture(new MediaStream([event.track]))
         const stream = new MediaStream([event.track])
         ear.srcObject = stream
+        unlisten(theirs)
         theirs = listen(stream)
         hear()
     }
@@ -197,6 +211,7 @@ export function openVoice(host: boolean, on: VoiceEvents): Voice | null {
         async speak(stream) {
             if (closed) return
             voiced = stream?.getAudioTracks()[0] ?? null
+            unlisten(mine)
             mine = stream ? listen(stream) : null
             await sender?.replaceTrack(voiced)
         },

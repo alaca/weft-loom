@@ -12,6 +12,8 @@ type Made = { hydra: any; canvas: HTMLCanvasElement; asked: string; frame: numbe
 const same = (a: PropertyDescriptor | undefined, b: PropertyDescriptor | undefined) => (a && b ? ('value' in a ? a.value === b.value : a.get === b.get && a.set === b.set) : a === b)
 let made: Made | null = null
 let making: Promise<any> | null = null
+// Counts the times Hydra was taken away, so that one still loading then does not come after all.
+let cleared = 0
 
 const SHOWN = 'hydra'
 
@@ -30,7 +32,9 @@ async function start(options: Record<string, unknown>, asked: string): Promise<a
     const shared = globalThis as unknown as { global?: unknown }
     shared.global ??= globalThis
     const before = new Map(Object.getOwnPropertyNames(window).map((name) => [name, Object.getOwnPropertyDescriptor(window, name)]))
+    const asOf = cleared
     const { default: Hydra } = await import('hydra-synth')
+    if (asOf !== cleared) return null
     const { feedStrudel = false, pixelRatio = 1, ...config } = { detectAudio: false, ...options } as Record<string, any>
     const canvas = document.createElement('canvas')
     canvas.id = 'hydra-canvas'
@@ -70,7 +74,27 @@ async function start(options: Record<string, unknown>, asked: string): Promise<a
     return hydra
 }
 
+// Hydra that listens to the microphone has an audio clock, the microphone and a small canvas of
+// its own, and lets go of none of them. The microphone may still be on its way when Hydra goes.
+const stopHearing = (heard: any) => {
+    if (!heard) return
+    const end = (stream?: MediaStream) => stream?.getTracks().forEach((track) => track.stop())
+    const close = (context?: AudioContext) => void context?.close().catch(() => undefined)
+    try {
+        heard.meyda?.stop()
+    } catch {
+        // Never started.
+    }
+    end(heard.stream)
+    close(heard.context)
+    heard.canvas?.remove()
+    let late: AudioContext | undefined
+    Object.defineProperty(heard, 'stream', { configurable: true, get: () => undefined, set: end })
+    Object.defineProperty(heard, 'context', { configurable: true, get: () => late, set: (context: AudioContext) => close((late = context)) })
+}
+
 export function clearHydra() {
+    cleared++
     if (!made) return
     const { hydra, canvas, frame, watch, before } = made
     made = null
@@ -82,6 +106,7 @@ export function clearHydra() {
     } catch {
         // Gone either way.
     }
+    stopHearing(hydra.synth?.a)
     canvas.remove()
     // Whatever of the window's is not as it was before Hydra came is put back as it was, and
     // what Hydra added is taken away.

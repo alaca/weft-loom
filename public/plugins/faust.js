@@ -4861,7 +4861,7 @@ const dependencies = {
 (${getFaustAudioWorkletProcessor.toString()})(dependencies, faustData);
 `;
 				const url = URL.createObjectURL(new Blob([processorCode], { type: "text/javascript" }));
-				await context.audioWorklet.addModule(url);
+				await context.audioWorklet.addModule(url); URL.revokeObjectURL(url);
 				(_b = FaustMonoDspGenerator.gWorkletProcessors.get(context)) === null || _b === void 0 || _b.add(processorName);
 			}
 			return new FaustMonoAudioWorkletNode(context, { processorOptions: {
@@ -4920,7 +4920,7 @@ const dependencies = {
 (${getFaustFFTAudioWorkletProcessor.toString()})(dependencies, faustData);
 `;
 			const url = URL.createObjectURL(new Blob([processorCode], { type: "text/javascript" }));
-			await context.audioWorklet.addModule(url);
+			await context.audioWorklet.addModule(url); URL.revokeObjectURL(url);
 			(_b = FaustMonoDspGenerator.gWorkletProcessors.get(context)) === null || _b === void 0 || _b.add(processorName);
 		}
 		const node = new FaustMonoAudioWorkletNode(context, {
@@ -5139,7 +5139,7 @@ const dependencies = {
 (${getFaustAudioWorkletProcessor.toString()})(dependencies, faustData);
 `;
 				const url = URL.createObjectURL(new Blob([processorCode], { type: "text/javascript" }));
-				await context.audioWorklet.addModule(url);
+				await context.audioWorklet.addModule(url); URL.revokeObjectURL(url);
 				(_b = FaustPolyDspGenerator.gWorkletProcessors.get(context)) === null || _b === void 0 || _b.add(processorName);
 			}
 			let node;
@@ -5283,5 +5283,8 @@ var FaustDspGenerator = class FaustDspGenerator {
 	}
 };
 FaustDspGenerator.compilerPromise = null;
+//#endregion
+//#region plugins/runtime.js
+FaustMonoDspGenerator.gWorkletProcessors = /* @__PURE__ */ new WeakMap();
 //#endregion
 export { FaustMonoDspGenerator };

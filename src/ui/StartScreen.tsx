@@ -54,6 +54,12 @@ export function StartScreen() {
         player.pause()
         setPlaying(null)
     }
+    // A preview that was heard stays loaded in the player until it is emptied.
+    const letGo = () => {
+        quiet()
+        player.removeAttribute('src')
+        player.load()
+    }
     const hear = (song: SiteSong) => {
         if (playing() === song.id) return quiet()
         player.src = song.preview
@@ -66,13 +72,13 @@ export function StartScreen() {
 
     createEffect(
         on(startOpen, (open) => {
-            if (!open) return quiet()
+            if (!open) return letGo()
             setNow(Date.now())
             void ask()
             void refreshAccount()
         }),
     )
-    onCleanup(() => player.pause())
+    onCleanup(letGo)
 
     const copyOf = async (song: SiteSong) => {
         if (opening()) return

@@ -46,6 +46,7 @@ function Picture(props: { of: MediaStream }) {
         video.srcObject = props.of
         void video.play().catch(() => undefined)
     })
+    onCleanup(() => (video.srcObject = null))
     return <video ref={video} autoplay playsinline muted />
 }
 

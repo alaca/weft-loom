@@ -1,6 +1,7 @@
 import * as core from '@strudel/core'
 import { evalScope } from '@strudel/core'
 import { aliasBank, getAudioContext, onceEnded, registerSound, registerSynthSounds, registerZZFXSounds, releaseAudioNode, samples, soundMap } from '@strudel/webaudio'
+import { forgetBuffer } from 'superdough'
 import { INSTRUMENT_TAG, KIT_TAG, YOURS_TAG } from '../sounds/catalog'
 import type { Job } from './ahead'
 import { builtKey, keepUpTo, MOST_KEPT, zzfxParams } from './zzfx'
@@ -182,9 +183,19 @@ const inKits = (name: string) => kits.map((kit) => `${kit.toLowerCase()}_${name}
 // The names of a sound of your own are many, so they are all set in one copy, or left out of
 // one, and the map is written once.
 export async function addOwnSound(name: string, url: string): Promise<void> {
+    const before = filesOf(soundMap.get()[name])
     await samples({ [name]: [url] }, '', { tag: YOURS_TAG })
     const known = soundMap.get()
     soundMap.set({ ...known, ...Object.fromEntries(inKits(name).map((key) => [key, known[name]])) })
+    for (const file of before) if (file !== url) forgetBuffer(file)
+}
+
+// The addresses of a sample's files. Strudel keeps each one decoded, by its address, until it is
+// told to forget it: a sound of your own that changed or went would otherwise stay in memory.
+const filesOf = (sound: { data?: { type?: string; samples?: unknown } } | undefined): string[] => {
+    const held = sound?.data?.type === 'sample' ? sound.data.samples : null
+    const lists = Array.isArray(held) ? [held] : held && typeof held === 'object' ? Object.values(held) : []
+    return lists.flat().filter((file): file is string => typeof file === 'string')
 }
 
 // Every name the sound is known under goes, whoever gave it the name: Strudel hands out names
@@ -195,6 +206,7 @@ export function removeOwnSound(name: string): void {
     const sound = known[name]
     const gone = new Set([name, ...inKits(name)])
     soundMap.set(Object.fromEntries(Object.entries(known).filter(([key, other]) => !gone.has(key) && (!sound || other !== sound))))
+    for (const file of filesOf(sound)) forgetBuffer(file)
 }
 
 export function soundTaken(name: string): boolean {

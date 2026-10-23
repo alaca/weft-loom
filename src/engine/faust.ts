@@ -10,20 +10,26 @@ import { EFFECT_CALL, PLUGINS, pluginNamed, type Plugin } from '../plugins/list'
 // A plugin sound gives each note a voice of its own for as long as the note sounds, so that the
 // filters, the envelope and the room of the pattern work on it as on any other sound. A plugin
 // effect is one for each pattern that uses it: the pattern's notes go to it over a bus of
-// Strudel's, in place of going straight out, and it goes out where they would have.
+// Strudel's, in place of going straight out, and it goes out where they would have. One that no
+// pattern has sent a note through for a while is handed to the next pattern that asks for that
+// plugin, so that renaming patterns and opening other songs does not make more and more of them.
 
 type Factory = { module: WebAssembly.Module; json: string; soundfiles: Record<string, never> }
 type Voice = { node: any; until: number }
-type Effect = { node: any; bus: number; from: AudioNode | null; to: AudioNode | null }
+type Effect = { node: any; bus: number; name: string; key: string; used: number; from: AudioNode | null; to: AudioNode | null }
 
 const VOICES = 8
 // How long a note of a plugin sound is let ring after it ends, before its voice is free again.
 const RING = 2
+// How long an effect goes without a note before another pattern may have it, in seconds: long
+// enough for an echo fed back near the most to have died away.
+const IDLE = 60
 const SHAPE = ['attack', 'decay', 'sustain', 'release']
 
 const factories = new Map<string, Promise<{ factory: Factory; paths: Map<string, string> }>>()
 const voicesBy = new WeakMap<BaseAudioContext, Map<string, Promise<Voice[]>>>()
 const effectsBy = new WeakMap<BaseAudioContext, Map<string, Promise<Effect>>>()
+const madeBy = new WeakMap<BaseAudioContext, Effect[]>()
 let nextBus = 1000
 
 // The part of Faust that plays a plugin, bundled beside the plugins as it was written (see
@@ -133,15 +139,28 @@ function effectOf(context: BaseAudioContext, key: string, name: string): Promise
     let mine = effectsBy.get(context)
     if (!mine) effectsBy.set(context, (mine = new Map()))
     let effect = mine.get(key)
-    if (!effect) {
+    if (effect) return effect
+    let made = madeBy.get(context)
+    if (!made) madeBy.set(context, (made = []))
+    const idle = made.find((one) => one.name === name && context.currentTime - one.used > IDLE)
+    if (idle) {
+        mine.delete(idle.key)
+        idle.key = key
+        idle.used = context.currentTime
+        effect = Promise.resolve(idle)
+    } else {
         const kept = mine
+        const all = made
         effect = (async () => {
             const { factory } = await loaded(name)
-            return { node: await (await generator()).createNode(context, name, factory), bus: nextBus++, from: null, to: null }
+            const node = await (await generator()).createNode(context, name, factory)
+            const one: Effect = { node, bus: nextBus++, name, key, used: context.currentTime, from: null, to: null }
+            all.push(one)
+            return one
         })()
         effect.catch(() => kept.delete(key))
-        mine.set(key, effect)
     }
+    mine.set(key, effect)
     return effect
 }
 
@@ -153,6 +172,7 @@ export async function throughEffect(value: Record<string, any>, pattern: string 
     if (!plugin || plugin.kind !== 'effect' || !pattern) return value
     const context: BaseAudioContext = getAudioContext()
     const [effect, { paths }] = await Promise.all([effectOf(context, `${pattern}\u0000${plugin.name}`, plugin.name), loaded(plugin.name)])
+    effect.used = Math.max(effect.used, time)
     const controller = getSuperdoughAudioController()
     const from: AudioNode = controller.getBus(effect.bus)
     const to: AudioNode = controller.getOrbit(value.orbit ?? 1).output

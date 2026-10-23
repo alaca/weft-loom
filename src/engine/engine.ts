@@ -14,6 +14,7 @@ import { snippetsFor, type Snippet } from '../library/snippets'
 import { evaluate as evaluateText, Pattern, pure, silence, slowcat, stack } from '@strudel/core'
 import { mini } from '@strudel/mini'
 import {
+    analysers,
     getAnalyserById,
     getAudioContext,
     getDefaultValue,
@@ -253,7 +254,8 @@ const pause = (ms: number) => new Promise<void>((resolve) => window.setTimeout(r
 const SETTLE = 300
 // A song with distortion or crush has a few dozen worklet nodes made every second, and WebKit
 // gives back what they took only when their audio clock is closed. After this many, a song
-// that is stopped gets a new clock. What still rings when a song stops has this long to ring out.
+// that is stopped gets a new clock at the next press, whether it was stopped by hand or came to
+// its end. What still rings when a song stops has this long to ring out.
 const MANY_NODES = 20000
 const RUNG_OUT = 5000
 const STRETCH = 2
@@ -429,6 +431,7 @@ export function createEngine(): Engine {
         if (!old.routed) return
         old.routed.player.pause()
         old.routed.player.srcObject = null
+        old.routed.to.stream.getTracks().forEach((track) => track.stop())
         old.routed = null
     }
     // The sound sent where it was chosen to go. A window whose clock can be told is told. One
@@ -928,6 +931,7 @@ export function createEngine(): Engine {
     const silence = () => {
         mirror.stop()
         registry = new Map()
+        listenOnlyTo(new Set())
         unmasked = new Map()
         sounding = new Set()
         evaluated = false
@@ -988,16 +992,24 @@ export function createEngine(): Engine {
             receiving = false
         }
     }
+    // One that cannot be taken in is dropped, as it is when it comes by itself: kept, it would
+    // hold up everything that comes after it.
     const takeKept = () => {
-        while (kept.length && !reheard) take(kept.shift()!)
+        while (kept.length && !reheard) {
+            try {
+                take(kept.shift()!)
+            } catch {
+                // Dropped.
+            }
+        }
     }
     const hearSoon = () => {
         window.clearTimeout(reheard)
         reheard = window.setTimeout(() => {
             reheard = 0
+            window.setTimeout(takeKept, 0)
             if (replayWaits()) replay()
             else void reevaluate()
-            window.setTimeout(takeKept, 0)
         }, 0)
     }
 
@@ -1078,17 +1090,30 @@ export function createEngine(): Engine {
         return hap.withValue((own: object) => ({ ...own, analyze: METER + name, fft: Math.log2(METER_WINDOW) - 5 }))
     }
     // What listens is asked every moment whether or not a sound is on its way, so that it reads
-    // silence when its pattern is silent and not the last thing it heard.
-    const asked = new WeakSet<AnalyserNode>()
+    // silence when its pattern is silent and not the last thing it heard. The sound engine keeps
+    // every listener it is asked for, so one is let go when its pattern goes or the meters close.
+    const listening = new Map<string, { listener: AnalyserNode; mute: GainNode }>()
+    const stopListening = (name: string) => {
+        const kept = listening.get(name)
+        if (!kept) return
+        listening.delete(name)
+        kept.mute.disconnect()
+        kept.listener.disconnect()
+        if (analysers[METER + name] === kept.listener) delete analysers[METER + name]
+    }
+    const listenOnlyTo = (names: Set<string>) => {
+        for (const name of [...listening.keys()]) if (!names.has(name)) stopListening(name)
+    }
     const listenerOf = (name: string): AnalyserNode | null => {
         const context: BaseAudioContext = getAudioContext()
         if (context instanceof OfflineAudioContext) return null
         const listener: AnalyserNode = getAnalyserById(METER + name, METER_WINDOW)
-        if (!asked.has(listener)) {
+        if (listening.get(name)?.listener !== listener) {
+            stopListening(name)
             const mute = new GainNode(context, { gain: 0 })
             listener.connect(mute)
             mute.connect(context.destination)
-            asked.add(listener)
+            listening.set(name, { listener, mute })
         }
         return listener
     }
@@ -1134,6 +1159,7 @@ export function createEngine(): Engine {
             afterEval: (done: { code?: string }) => {
                 applyMix()
                 registry = pending
+                listenOnlyTo(new Set(registry.keys()))
                 unmasked = pendingUnmasked
                 sounding = pendingSounding
                 evaluated = true
@@ -1169,6 +1195,7 @@ export function createEngine(): Engine {
                     gesture++
                     freshClock()
                     wakeOutput()
+                    if (!state.playing && !state.paused) renewSoon()
                 },
                 true,
             )
@@ -1178,6 +1205,7 @@ export function createEngine(): Engine {
                     gesture++
                     freshClock()
                     wakeOutput()
+                    if (!state.playing && !state.paused) renewSoon()
                 },
                 true,
             )
@@ -1708,6 +1736,7 @@ export function createEngine(): Engine {
         },
         setMeters(on) {
             metering = on
+            if (!on) listenOnlyTo(new Set())
         },
         levelOf(name) {
             if (!metering) return 0
